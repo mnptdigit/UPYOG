@@ -11,4 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface BankaccountRepository extends JpaRepository<Bankaccount, Long>, JpaSpecificationExecutor<Bankaccount> {
 
 	Optional<Bankaccount> findByAccountnumber(String accountnumber);
+	
+	boolean existsByAccountnumberAndBankbranch_Id(String accountnumber, Long branchId);
+	boolean existsByAccountnumberAndBankbranch_IdAndIdNot(String accountnumber, Long branchId, Long id);
 }

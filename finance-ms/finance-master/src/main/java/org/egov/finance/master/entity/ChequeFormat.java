@@ -8,10 +8,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "chequeformat")
 @SequenceGenerator(name = ChequeFormat.SEQ, sequenceName = ChequeFormat.SEQ, allocationSize = 1)
+@Data
 public class ChequeFormat extends AuditDetailswithVersion {
     
     private static final long serialVersionUID = 1L;
@@ -38,4 +40,5 @@ public class ChequeFormat extends AuditDetailswithVersion {
     private Double amountLength;
     private String amountCoordinate;
     private boolean formatStatus;
+	
 }
