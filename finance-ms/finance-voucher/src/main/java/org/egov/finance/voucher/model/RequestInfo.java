@@ -5,6 +5,8 @@
  */
 package org.egov.finance.voucher.model;
 
+import org.egov.finance.voucher.entity.User;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
@@ -22,4 +24,6 @@ public class RequestInfo {
 	private String requesterId;
 	private String authToken;
 	private String tenantId;
+	
+	 private User userInfo;
 }

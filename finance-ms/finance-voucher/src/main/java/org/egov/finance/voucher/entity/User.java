@@ -15,6 +15,7 @@ import org.egov.finance.voucher.validation.Unique;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.jpa.domain.AbstractAuditable;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.gson.annotations.Expose;
 
@@ -41,6 +42,7 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 @Entity
 @Table(name = "eg_user")
@@ -50,6 +52,7 @@ import jakarta.validation.constraints.Pattern;
 @Unique(fields = { "username", "pan", "aadhaarNumber", "emailId" }, enableDfltMsg = true, isSuperclass = true)
 @CompositeUnique(fields = { "type", "mobileNumber" }, enableDfltMsg = true, message = "{user.exist.with.same.mobileno}")
 @JsonIgnoreProperties({ "createdBy", "lastModifiedBy" })
+@Data
 public class User extends AuditDetailswithVersion {
 	public static final String SEQ_USER = "SEQ_EG_USER";
 	private static final long serialVersionUID = -2415368058955783970L;
@@ -121,9 +124,11 @@ public class User extends AuditDetailswithVersion {
 	// @AuditJoinTable
 	private Set<Role> roles = new HashSet<>();
 
+	@JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "IST")
 	@Temporal(TemporalType.DATE)
 	private Date dob;
 
+	@JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "IST")
 	@NotNull
 	private Date pwdExpiryDate = new Date();
 
@@ -134,22 +139,24 @@ public class User extends AuditDetailswithVersion {
 	@Column(name = "type")
 	private UserType type;
 
-	private byte[] signature;
+	// private byte[] signature; Cannot deserialize value of type `byte[]` from
+	// String "": Unexpected end of base64-encoded String
+
+	private String signature;
 
 	private boolean accountLocked;
 
 	@Transient
 	private String uuid;
-	
-	 @Override
-	    public Long getId() {
-	        return id;
-	    }
 
-	    @Override
-	    public void setId(final Long id) {
-	        this.id = id;
-	    }
+	@Override
+	public Long getId() {
+		return id;
+	}
 
+	@Override
+	public void setId(final Long id) {
+		this.id = id;
+	}
 
 }

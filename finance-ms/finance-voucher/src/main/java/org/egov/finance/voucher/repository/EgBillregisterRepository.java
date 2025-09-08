@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface EgBillregisterRepository extends JpaRepository<EgBillregister, Long> {
 
 	Optional<EgBillregister> findById(Long billId);
+
+	boolean existsByBillnumberIgnoreCase(String billNumber);
 }

@@ -10,6 +10,8 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Temporal;
@@ -25,11 +27,15 @@ public abstract class AuditDetailswithVersion extends AbstractPersistable<Long> 
 
 	@CreatedBy
 	private Long createdBy;
+	
+	@JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "IST")
 	@Temporal(TemporalType.TIMESTAMP)
 	@CreatedDate
 	private Date createdDate;
 	@LastModifiedBy
 	private Long lastModifiedBy;
+	
+	@JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "IST")
 	@Temporal(TemporalType.TIMESTAMP)
 	@LastModifiedDate
 	private Date lastModifiedDate;

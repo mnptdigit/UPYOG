@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 import org.egov.finance.voucher.daoimpl.AccountdetailtypeHibernateDAO;
 import org.egov.finance.voucher.daoimpl.VouchermisHibernateDAO;
+import org.egov.finance.voucher.entity.AppConfig;
 import org.egov.finance.voucher.entity.AppConfigValues;
 import org.egov.finance.voucher.entity.Boundary;
 import org.egov.finance.voucher.entity.CVoucherHeader;
@@ -26,7 +28,9 @@ import org.egov.finance.voucher.exception.ApplicationRuntimeException;
 import org.egov.finance.voucher.exception.TaskFailedException;
 import org.egov.finance.voucher.exception.ValidationError;
 import org.egov.finance.voucher.exception.ValidationException;
+import org.egov.finance.voucher.model.RequestInfo;
 import org.egov.finance.voucher.model.Transaxtion;
+import org.egov.finance.voucher.model.WorkflowBean;
 import org.egov.finance.voucher.repository.AccountDetailKeyRepository;
 import org.egov.finance.voucher.repository.AccountDetailTypeRepository;
 import org.egov.finance.voucher.repository.CChartOfAccountDetailRepository;
@@ -43,6 +47,7 @@ import org.egov.finance.voucher.repository.SchemeRepository;
 import org.egov.finance.voucher.repository.SubSchemeRepository;
 import org.egov.finance.voucher.repository.VoucherRepository;
 import org.egov.finance.voucher.repository.VouchermisRepository;
+import org.egov.finance.voucher.util.CommonUtils;
 import org.egov.finance.voucher.util.FinancialConstants;
 import org.egov.finance.voucher.util.VoucherConstant;
 import org.egov.finance.voucher.validation.VoucherValidation;
@@ -51,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +71,7 @@ public class CreateVoucher {
 	private final static String SALBILL = "Salary";
 	private final static String PENSBILL = "Pension";
 	private final static String GRATBILL = "Gratuity";
+	private static final String ERR = "Exception in CreateVoucher";
 	// messages
 	private final static String FUNDMISSINGMSG = "Fund is not used in Bill ,cannot create Voucher";
 	private static final String FAILED = "Transaction failed";
@@ -153,11 +160,21 @@ public class CreateVoucher {
 	@Autowired
 	private TransactionService transactionService;
 
+	@Autowired
+	private AppConfigService appConfigService;
+
+	@Autowired
+	private CommonUtils commonUtils;
+
+	@Autowired
+	private JournalVoucherActionHelper journalVoucherActionHelper;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(CreateVoucher.class);
 
 	@Transactional
 	public CVoucherHeader createVoucher(final Map<String, Object> headerDetails,
-			final List<Map<String, Object>> accountdetails, final List<Map<String, Object>> subledgerDetails)
+			final List<Map<String, Object>> accountdetails, final List<Map<String, Object>> subledgerDetails,
+			RequestInfo requestInfo, final WorkflowBean workflowBean)
 			throws ApplicationRuntimeException, TaskFailedException {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -224,6 +241,20 @@ public class CreateVoucher {
 			final SimpleDateFormat formatter = new SimpleDateFormat(DD_MMM_YYYY);
 			if (!chartOfAccountService.postTransactions(txnList, formatter.format(vh.getVoucherDate()))) {
 				throw new ApplicationRuntimeException("Voucher creation Failed");
+			}
+
+			// Workflow: If applicable, validate and transition
+			if (workflowBean != null && StringUtils.hasText(workflowBean.getWorkFlowAction())
+					&& (FinancialConstants.BUTTONFORWARD.equalsIgnoreCase(workflowBean.getWorkFlowAction())
+							|| FinancialConstants.CREATEANDAPPROVE
+									.equalsIgnoreCase(workflowBean.getWorkFlowAction()))) {
+				if (!commonUtils.isValidApprover(vh, workflowBean.getApproverPositionId())) {
+					throw new ValidationException("Invalid Approver", "Selected approver is not valid.");
+				}
+
+				vh = journalVoucherActionHelper.transitionWorkFlow(vh, workflowBean, requestInfo);
+
+				voucherRepository.save(vh);
 			}
 
 			// Trigger event
@@ -590,5 +621,31 @@ public class CreateVoucher {
 
 		return isUnique;
 	}
+
+//	public CVoucherHeader createPreApprovedVoucher(Map<String, Object> headerDetails,
+//			List<Map<String, Object>> accountdetails, List<Map<String, Object>> subledgerDetails)
+//			throws ApplicationRuntimeException, TaskFailedException {
+//		final AppConfig appConfig = appConfigService.getAppConfigByKeyName("PREAPPROVEDVOUCHERSTATUS");
+//		if (null != appConfig && null != appConfig.getConfValues())
+//			for (final AppConfigValues appConfigVal : appConfig.getConfValues())
+//				headerDetails.put(VoucherConstant.STATUS, Integer.valueOf(appConfigVal.getValue()));
+//		else
+//			throw new ApplicationRuntimeException(
+//					"Appconfig value for PREAPPROVEDVOUCHERSTATUS is not defined in the system");
+//		CVoucherHeader vh;
+//		try {
+//			vh = createVoucher(headerDetails, accountdetails, subledgerDetails, workflowBean);
+//			/*
+//			 * if (vh.getModuleId() != null) startWorkflow(vh);
+//			 */
+//			// if u need workflow enable above lines and fix workflow
+//		} catch (final ValidationException ve) {
+//			LOGGER.error(ERR, ve);
+//			final List<ValidationError> errors = new ArrayList<ValidationError>();
+//			errors.add(new ValidationError("exp", ve.getErrors().get(0).getMessage()));
+//			throw new ValidationException(errors);
+//		}
+//		return vh;
+//	}
 
 }

@@ -15,15 +15,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.egov.finance.voucher.entity.CVoucherHeader;
 import org.egov.finance.voucher.exception.MasterServiceException;
+import org.egov.finance.voucher.model.EmployeeInfo;
 import org.egov.finance.voucher.model.MasterDetail;
 import org.egov.finance.voucher.model.MdmsCriteria;
 import org.egov.finance.voucher.model.MdmsCriteriaReq;
 import org.egov.finance.voucher.model.ModuleDetail;
 import org.egov.finance.voucher.model.RequestInfo;
+import org.egov.finance.voucher.service.EisCommonService;
+import org.egov.finance.voucher.service.SimpleWorkflowService;
+import org.egov.finance.voucher.workflow.entity.StateAware;
+import org.egov.finance.voucher.workflow.entity.WorkFlowMatrix;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -43,6 +50,14 @@ public class CommonUtils {
 	private String mdmsSearch;
 
 	private RestTemplate restTemplate;
+
+	@Autowired
+	private EisCommonService eisCommonService;
+	@Autowired
+	@Qualifier("workflowService")
+	private SimpleWorkflowService<?> workflowService;
+	@Autowired
+	private MicroserviceUtils microserviceUtils;
 
 	@Autowired
 	public CommonUtils(RestTemplate restTemplate) {
@@ -109,53 +124,68 @@ public class CommonUtils {
 	 * @author bpattanayak
 	 */
 	public List<String> applyNonNullFields(Object source, Object target) {
-	    BeanWrapper srcWrapper = new BeanWrapperImpl(source);
-	    BeanWrapper trgWrapper = new BeanWrapperImpl(target);
-	    List<String> updatedFields = new ArrayList<>();
+		BeanWrapper srcWrapper = new BeanWrapperImpl(source);
+		BeanWrapper trgWrapper = new BeanWrapperImpl(target);
+		List<String> updatedFields = new ArrayList<>();
 
-	    for (PropertyDescriptor propertyDescriptor : srcWrapper.getPropertyDescriptors()) {
-	        String propertyName = propertyDescriptor.getName();
+		for (PropertyDescriptor propertyDescriptor : srcWrapper.getPropertyDescriptors()) {
+			String propertyName = propertyDescriptor.getName();
 
-	        if (!trgWrapper.isWritableProperty(propertyName)) {
-	            continue;
-	        }
+			if (!trgWrapper.isWritableProperty(propertyName)) {
+				continue;
+			}
 
-	        Object sourceValue = srcWrapper.getPropertyValue(propertyName);
-	        Object targetValue = trgWrapper.getPropertyValue(propertyName);
+			Object sourceValue = srcWrapper.getPropertyValue(propertyName);
+			Object targetValue = trgWrapper.getPropertyValue(propertyName);
 
-	        if (!ObjectUtils.isEmpty(sourceValue) && !Objects.equals(sourceValue, targetValue)) {
-	            trgWrapper.setPropertyValue(propertyName, sourceValue);
-	            updatedFields.add(propertyName);
-	        }
-	    }
+			if (!ObjectUtils.isEmpty(sourceValue) && !Objects.equals(sourceValue, targetValue)) {
+				trgWrapper.setPropertyValue(propertyName, sourceValue);
+				updatedFields.add(propertyName);
+			}
+		}
 
-	    return updatedFields;
+		return updatedFields;
 	}
-	
+
 	/**
-     * Safely converts a list of unknown objects (e.g., LinkedHashMap) to a list of the specified target class.
-     *
-     * @param sourceList  the original list (possibly from cache or deserialized JSON)
-     * @param targetClass the class to convert each element to
-     * @param <T>         the type of the target class
-     * @return a list of converted objects
-     * @author bpattanayak
-     */
+	 * Safely converts a list of unknown objects (e.g., LinkedHashMap) to a list of
+	 * the specified target class.
+	 *
+	 * @param sourceList  the original list (possibly from cache or deserialized
+	 *                    JSON)
+	 * @param targetClass the class to convert each element to
+	 * @param <T>         the type of the target class
+	 * @return a list of converted objects
+	 * @author bpattanayak
+	 */
 	public <T> List<T> convertListIfNeeded(Object sourceList, Class<T> targetClass) {
 		final ObjectMapper objectMapper = new ObjectMapper();
-	        if (sourceList instanceof List<?> list && !list.isEmpty()) {
-	            Object first = list.get(0);
-	            if (targetClass.isInstance(first)) {
-	                return (List<T>) list;
-	            } else if (first instanceof LinkedHashMap) {
-	                return objectMapper.convertValue(
-	                    list,
-	                    objectMapper.getTypeFactory().constructCollectionType(List.class, targetClass)
-	                );
-	            }
-	        }
-	        return List.of(); 
-	    }
+		if (sourceList instanceof List<?> list && !list.isEmpty()) {
+			Object first = list.get(0);
+			if (targetClass.isInstance(first)) {
+				return (List<T>) list;
+			} else if (first instanceof LinkedHashMap) {
+				return objectMapper.convertValue(list,
+						objectMapper.getTypeFactory().constructCollectionType(List.class, targetClass));
+			}
+		}
+		return List.of();
+	}
 
+	public boolean isValidApprover(final StateAware state, final Long approverPositionId) {
+		String currentState = null;
+		if (state.getCurrentState() != null)
+			currentState = state.getCurrentState().getValue();
+		final WorkFlowMatrix wfmatrix = workflowService.getWfMatrix(state.getStateType(), null, null, null,
+				currentState, null);
+		if (approverPositionId != 0 && approverPositionId != -1 && approverPositionId != null) {
+			EmployeeInfo employee = microserviceUtils.getEmployeeByPositionId(approverPositionId);
+			String designation = microserviceUtils
+					.getDesignation(employee == null ? "" : employee.getAssignments().get(0).getDesignation()).get(0)
+					.getName();
+			return eisCommonService.isValidAppover(wfmatrix, designation);
+		}
+		return false;
+	}
 
 }
