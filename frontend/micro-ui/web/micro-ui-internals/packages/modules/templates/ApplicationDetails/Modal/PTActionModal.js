@@ -61,7 +61,6 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
   let modeOfPayments = [{code: 'YEARLY', name: 'YEARLY'},{code: 'HALFYEARLY', name: 'HALFYEARLY'},{code: 'QUARTERLY', name: 'QUARTERLY'}]
   useEffect(() => {
     if (financialYearsData && financialYearsData["egf-master"]) {
-      console.log("=====",financialYearsData["egf-master"]?.["FinancialYear"]);
       setFinancialYears(financialYearsData["egf-master"]?.["FinancialYear"]);
     }
   }, [financialYearsData]);
@@ -164,7 +163,19 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
         let currentFinYr = getCurrentFinancialYear();
         // setSelectedModeofPayment(null)
         if(selectedFinancialYear && selectedFinancialYear.name == currentFinYr) {
-          modeOfPayments = [{code: 'YEARLY', name: 'YEARLY'},{code: 'HALFYEARLY', name: 'HALFYEARLY'},{code: 'QUARTERLY', name: 'QUARTERLY'}]
+
+          const today = new Date();
+          const year = today.getFullYear();
+
+          // Define 1 April and 30 June of the current year
+          const aprilFirst = new Date(year, 3, 1);   // month index 3 = April
+          const juneThirtieth = new Date(year, 5, 30); // month index 5 = June
+
+          if (today >= aprilFirst && today <= juneThirtieth) {
+            modeOfPayments = [{code: 'YEARLY', name: 'YEARLY'},{code: 'HALFYEARLY', name: 'HALFYEARLY'},{code: 'QUARTERLY', name: 'QUARTERLY'}]
+          } else {
+            modeOfPayments = [{code: 'YEARLY', name: 'YEARLY'}]
+          }
         } else {
           modeOfPayments = [{code: 'YEARLY', name: 'YEARLY'}]
 

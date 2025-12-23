@@ -34,7 +34,8 @@ const AssessmentDetails = () => {
   const fourth_temp=useRef();
   
   const getPropertyTypeLocale = (value) => {
-    return `PROPERTYTAX_${value?.split(".")[0]}`;
+    // return `PROPERTYTAX_${value?.split(".")[1]}`;
+    return value=='VACANT' ? 'Vacant' :`${value?.split(".")[1]}`.toLocaleLowerCase();
   };
   
   const getPropertySubtypeLocale = (value) => `PROPERTYTAX_${value}`;  
@@ -118,8 +119,8 @@ const AssessmentDetails = () => {
         { Assessment:AssessmentData},
         {
           onError: (error, variables) => {
-            setShowToast({ key: "error", action: error?.response?.data?.Errors[0]?.message || error.message, error : {  message:error?.response?.data?.Errors[0]?.message || error.message } });
-            setTimeout(closeToast, 5000);
+            setShowToast({ key: "error", action: error?.response?.data?.Errors[0]?.message || error.message, error : {  message:error?.response?.data?.Errors[0]?.message || error.message, isAssessmentError: true } });
+            setTimeout(closeToast, 50000);
           },
           onSuccess: (data, variables) => {
             sessionStorage.setItem("IsPTAccessDone", data?.Assessments?.[0]?.auditDetails?.lastModifiedTime);
@@ -127,12 +128,15 @@ const AssessmentDetails = () => {
             let userType = JSON.parse(user)
             setShowToast({ key: "success", action: { action: "ASSESSMENT" } });
             setTimeout(closeToast, 5000);
-            console.log("useType.value.info.type",userType,typeof(userType))
             // queryClient.clear();
             // queryClient.setQueryData(["PT_ASSESSMENT", propertyId, location?.state?.Assessment?.financialYear], true);
             if(userType?.value?.info?.type == "CITIZEN")
             {
-              history.push(`/digit-ui/citizen/pt-home`);
+              setShowToast({ key: "success", action: { action: "ASSESSMENT" } });
+              setTimeout(closeToast, 5000);
+              setTimeout(() => {
+                history.push(`/digit-ui/citizen/pt-home`);
+              }, 2000);
             }
             else{
               proceeedToPay()
@@ -439,13 +443,15 @@ const Penality_menu=[
                 title: "PT_ASSESMENT_INFO_SUB_HEADER",
                 values: [
                   { title: "PT_ASSESMENT_INFO_TYPE_OF_BUILDING", value: getPropertyTypeLocale(applicationDetails?.applicationData?.propertyType) },
-                  { title: "PT_ASSESMENT_INFO_USAGE_TYPE", value: getPropertySubtypeLocale(applicationDetails?.applicationData?.usageCategory) },
-                  { title: "PT_ASSESMENT_INFO_PLOT_SIZE", value: applicationDetails?.applicationData?.landArea },
+                  { title: "Usage Type", value: getPropertySubtypeLocale(applicationDetails?.applicationData?.usageCategory) },
+                  { title: "Plot Area (sq ft)", value: applicationDetails?.applicationData?.landArea },
                   { title: "PT_ASSESMENT_INFO_NO_OF_FLOOR", value: applicationDetails?.applicationData?.noOfFloors },
+                  { title: "Vacant Land Usage Type", value: (ptCalculationEstimateData?.Calculation[0]?.vacantland[0] && ptCalculationEstimateData?.Calculation[0]?.vacantland[0]?.vacantlandtype) ? "COMMON_PROPUSGTYPE_NONRESIDENTIAL_"+ptCalculationEstimateData?.Calculation[0]?.vacantland[0]?.vacantlandtype : ''},
+                  { title: "APV of Vacant Land", value: ptCalculationEstimateData?.Calculation[0]?.vacantland[0]?.vacantlandamount }
                 ],
                 additionalDetails: {
-                  floors: applicationDetails?.applicationData?.units
-                    ?.filter((e) => e.active)
+                  floors: ptCalculationEstimateData?.Calculation[0]?.units
+                    // ?.filter((e) => e.active)
                     ?.sort?.((a, b) => a.floorNo - b.floorNo)
                     ?.map((unit, index) => {
                       let floorName = `PROPERTYTAX_FLOOR_${unit.floorNo}`;
@@ -460,7 +466,8 @@ const Penality_menu=[
                         },
                         {
                           title: "PT_ASSESSMENT_UNIT_USAGE_TYPE",
-                          value: `PROPERTYTAX_${ unit?.usageCategory
+                          // value: `PROPERTYTAX_${ unit?.usageCategory
+                          value: `PROPERTYTAX_${ unit?.usageCategoryMajor
                           }`,
                         },
                         {
@@ -468,12 +475,17 @@ const Penality_menu=[
                           value: unit?.occupancyType,
                         },
                         {
-                          title: "PT_FORM2_BUILT_AREA",
-                          value: unit?.constructionDetail?.builtUpArea,
+                          title: "Built Up Area (sq ft)",
+                          value: unit?.unitArea
+                          // value: unit?.constructionDetail?.builtUpArea,
+                        },
+                        {
+                          title: "APV of Covered Area",
+                          value: unit?.taxamount || 0,
                         },
                       ];
         
-                      if (unit.occupancyType === "RENTED") values.push({ title: "PT_FORM2_TOTAL_ANNUAL_RENT", value: unit.arv });
+                      // if (unit.occupancyType === "RENTED") values.push({ title: "PT_FORM2_TOTAL_ANNUAL_RENT", value: unit.arv });
         
                       return {
                         //title: floorName,

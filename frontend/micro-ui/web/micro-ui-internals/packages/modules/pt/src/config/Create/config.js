@@ -83,7 +83,7 @@ export const newConfig =[
                     "withoutLabel": true,
                     "texts": {
                         "headerCaption": "PT_PROPERTY_LOCATION_CAPTION",
-                        "header": "PT_PROOF_OF_ADDRESS_HEADER",
+                        "header": "PT_PROOF_IDENTITY_HEADER",
                         "cardText": "",
                         "nextText": "PT_COMMONS_NEXT",
                         "submitBarLabel": "PT_COMMONS_NEXT"
@@ -236,8 +236,23 @@ export const newConfig =[
                     },
                     "key": "units",
                     "withoutLabel": true,
-                    "nextStep": "usageCategory",
+                    "nextStep": "usageCategoryVacant",
                     "hideInEmployee": true
+                },
+                {
+                    "route": "usageCategoryVacant",
+                    "component": "UsageCategoryVacantLand",
+                    "texts": {
+                        "headerCaption": "",
+                        "header": "PT_USAGE_CATEGORY",
+                        "cardText": "",
+                        "submitBarLabel": "PT_COMMON_NEXT",
+                        // "skipText": "CORE_COMMON_SKIP_CONTINUE"
+                    },
+                    "withoutLabel": true,
+                    "key": "usageCategory",
+                    "nextStep": "pincode",
+                    "type": "component"
                 },
                 {
                     "route": "usageCategory",
@@ -246,10 +261,25 @@ export const newConfig =[
                         "headerCaption": "",
                         "header": "PT_USAGE_CATEGORY",
                         "cardText": "",
-                        "submitBarLabel": "PT_COMMON_NEXT"
+                        "submitBarLabel": "PT_COMMON_NEXT",
+                        "skipText": "CORE_COMMON_SKIP_CONTINUE"
                     },
                     "withoutLabel": true,
                     "key": "usageCategory",
+                    "nextStep": "buildingPermission",
+                    "type": "component"
+                },
+                {
+                    "route": "buildingPermission",
+                    "component": "PTBuildingPermission",
+                    "texts": {
+                        "headerCaption": "",
+                        "header": "Building Permission",
+                        "cardText": "",
+                        "submitBarLabel": "PT_COMMON_NEXT"
+                    },
+                    "withoutLabel": true,
+                    "key": "buildingPermission",
                     "nextStep": "pincode",
                     "type": "component"
                 },
@@ -344,7 +374,7 @@ export const newConfig =[
                         "cardText": "PT_FLAT_DETAILS_DESC",
                         "submitBarLabel": "PT_COMMON_NEXT"
                     },
-                    "nextStep": "pincode",
+                    "nextStep": "usageCategory",
                     "key": "units",
                     "withoutLabel": true,
                     "hideInEmployee": true
@@ -517,13 +547,14 @@ export const newConfig =[
                     "component": "SelectProofIdentity",
                     "texts": {
                         "headerCaption": "PT_DOCUMENT_DETAILS",
-                        "header": "PT_PROOF_IDENTITY_HEADER",
+                        "header": "PT_PROOF_OF_ADDRESS_HEADER",
                         "cardText": "",
                         "submitBarLabel": "PT_COMMON_NEXT",
                         "addMultipleText": "PT_COMMON_ADD_APPLICANT_LABEL"
                     },
                     "key": "owners",
                     "withoutLabel": true,
+                    "nextStep": null,
                     "nextStep": 'exemption-details',
                     "hideInEmployee": true
                 },
@@ -566,7 +597,7 @@ export const newConfig =[
                     "component": "SelectProofIdentity",
                     "texts": {
                         "headerCaption": "PT_OWNERS_DETAILS",
-                        "header": "PT_PROOF_IDENTITY_HEADER",
+                        "header": "PT_PROOF_OF_ADDRESS_HEADER",
                         "cardText": "",
                         "submitBarLabel": "PT_COMMON_NEXT"
                     },
@@ -629,7 +660,8 @@ export const newConfig =[
                         "headerCaption": "",
                         "header": "PT_PROPERTY_PHOTO",
                         "cardText": "",
-                        "submitBarLabel": "PT_COMMONS_NEXT"
+                        "submitBarLabel": "PT_COMMONS_NEXT",
+                        "skipText": "CORE_COMMON_SKIP_CONTINUE"
                     },
                     "nextStep": null,
                     "key": "propertyPhoto",

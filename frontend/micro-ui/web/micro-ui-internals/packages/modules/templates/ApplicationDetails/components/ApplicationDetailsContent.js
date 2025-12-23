@@ -33,7 +33,7 @@ import DocumentsPreview from "./DocumentsPreview";
 import InfoDetails from "./InfoDetails";
 import ViewBreakup from"./ViewBreakup";
 
-const getParentPropertyDetails = async (tenantId, propertyId, updateparentPropertyDetails) => {
+const getParentPropertyDetails = async (tenantId, propertyId, updateparentPropertyDetails,updateParentPropertyFetchDetails) => {
   const oldPropertyData = await Digit.PTService.search({ tenantId, filters: { propertyIds: propertyId } })
  
   updateparentPropertyDetails(oldPropertyData?.Properties || [])
@@ -57,6 +57,7 @@ function ApplicationDetailsContent({
   oldValue,
   isInfoLabel = false
 }) {
+  console.log("applicationDetails===",applicationDetails)
   const { t } = useTranslation();
   const [parentPropertyDetails, updateparentPropertyDetails] = useState([]);
   const [isPropertyDetails, updateParentPropertyFetchDetails] = useState({
@@ -83,10 +84,18 @@ function ApplicationDetailsContent({
   };
   const getTimelineCaptions = (checkpoint,index=0) => {
     if (checkpoint.state === "OPEN" || (checkpoint.status === "INITIATED" && !window.location.href.includes("/obps/"))) {
-      const caption = {
+      let caption = {
         date: convertEpochToDateDMY(applicationData?.auditDetails?.createdTime),
         source: applicationData?.channel || "",
       };
+      if(checkpoint?.performedAction=="SENDBACKTODOCKVERIFIER" || checkpoint?.performedAction=="SENDBACKTODOCVERIFIER")
+      caption = {
+        date: convertEpochToDateDMY(applicationData?.auditDetails?.lastModifiedTime),
+        // name: checkpoint?.assigner?.name,
+        name: checkpoint?.assignes?.[0]?.name,
+        // mobileNumber: checkpoint?.assigner?.mobileNumber,
+        wfComment: checkpoint?.wfComment,
+      }
       return <TLCaption data={caption} />;
     } else if (window.location.href.includes("/obps/") || window.location.href.includes("/noc/") || window.location.href.includes("/ws/")) {
       //From BE side assigneeMobileNumber is masked/unmasked with connectionHoldersMobileNumber and not assigneeMobileNumber
@@ -119,7 +128,7 @@ function ApplicationDetailsContent({
         name: checkpoint?.assignes?.[0]?.name,
         // mobileNumber: checkpoint?.assigner?.mobileNumber,
         wfComment: checkpoint?.wfComment,
-        mobileNumber: checkpoint?.assignes?.[0]?.mobileNumber,
+        // mobileNumber: checkpoint?.assignes?.[0]?.mobileNumber,
       };
       return <TLCaption data={caption} />;
     }
@@ -198,6 +207,7 @@ function ApplicationDetailsContent({
     getParentPropertyDetails(applicationDetails?.tenantId, applicationDetails?.applicationData?.parentPropertyId, updateparentPropertyDetails,updateParentPropertyFetchDetails);
 
   }
+
   
   return (
     <div>
@@ -231,7 +241,7 @@ function ApplicationDetailsContent({
           <React.Fragment key={index}>
             <div style={getMainDivStyles()}>
               {index === 0 && !detail.asSectionHeader ? (
-                <CardSubHeader style={{ marginBottom: "16px", fontSize: "16px" }}>{t(detail.title)}</CardSubHeader>
+                <CardSubHeader style={{ marginBottom: "16px", fontSize: "16px", color: "#0f4f9e" }}>{t(detail.title)}</CardSubHeader>
               ) : (
                 <React.Fragment>
                   <CardSectionHeader
@@ -452,7 +462,8 @@ function ApplicationDetailsContent({
                               info={checkpoint.comment}
                               label={t(
                                 `${timelineStatusPrefix}${
-                                  checkpoint?.performedAction === "REOPEN" ? checkpoint?.performedAction : checkpoint?.[statusAttribute]
+                                  checkpoint?.performedAction === "REOPEN" ? checkpoint?.performedAction : 
+                                  (checkpoint?.performedAction === "SENDBACKTODOCKVERIFIER" || checkpoint?.performedAction === "SENDBACKTODOCVERIFIER") ? "REOPEN" : checkpoint?.[statusAttribute]
                                 }${timelineStatusPostfix}`
                               )}
                               customChild={getTimelineCaptions(checkpoint,index)}

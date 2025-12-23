@@ -48,7 +48,6 @@ const ApplicationDetails = () => {
     },
     { enabled: enableAudit, select: (data) => data.Properties?.filter((e) => e.status === "ACTIVE") }
   );
-  console.log("Application Details==", auditData)
 
 
   const showTransfererDetails = React.useCallback(() => {
@@ -135,10 +134,13 @@ const ApplicationDetails = () => {
 
   if (!(appDetailsToShow?.applicationDetails?.[0]?.values?.[0].title === "PT_PROPERTY_APPLICATION_NO")) {
     appDetailsToShow?.applicationDetails?.unshift({
+      title: "Application Details",
       values: [
         { title: "PT_PROPERTY_APPLICATION_NO", value: appDetailsToShow?.applicationData?.acknowldgementNumber },
         { title: "PT_SEARCHPROPERTY_TABEL_PTUID", value: appDetailsToShow?.applicationData?.propertyId },
         { title: "ES_APPLICATION_CHANNEL", value: `ES_APPLICATION_DETAILS_APPLICATION_CHANNEL_${appDetailsToShow?.applicationData?.channel}` },
+        { title: "Apportioned Property", value: appDetailsToShow?.applicationData?.isPartOfProperty ? t("PT_COMMON_YES") : t("PT_COMMON_NO") },
+
       ],
     });
   }
@@ -180,7 +182,7 @@ const ApplicationDetails = () => {
     const tenantInfo  = tenants.find((tenant) => tenant.code === Property.tenantId);
 
     const data = await getPTAcknowledgementData(Property, tenantInfo, t);
-    Digit.Utils.pdf.generate(data);
+        Digit.Utils.pdf.generate(data);
   };
 
   const propertyDetailsPDF = {
@@ -200,6 +202,8 @@ const ApplicationDetails = () => {
     />
    )
  } 
+
+ console.log("appDetailsToShow===203==",appDetailsToShow)
 
   return (
     <div>
