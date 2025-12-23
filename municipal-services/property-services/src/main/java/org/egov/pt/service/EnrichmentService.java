@@ -304,7 +304,7 @@ public class EnrichmentService {
 		if (!CollectionUtils.isEmpty(property.getUnits())) {
 			property.getUnits().forEach(unit -> {
 
-				if (unit.getId() == null) {
+				if (unit.getId() == null || ObjectUtils.isEmpty(unit.getId())) {
 					unit.setId(UUID.randomUUID().toString());
 					unit.setActive(true);
 				}
@@ -731,16 +731,30 @@ public class EnrichmentService {
 
 		String ackNo;
 		String pId ="";
+		//removing mn-ac from acknowledgement number adding city code in place of it
+		List<String> masterNames = new ArrayList<>(
+						Arrays.asList("tenants"));
+		Map<String, List<String>> codes = propertyutil.getAttributeValues(config.getStateLevelTenantId(), "tenant", masterNames,
+						"[?(@.city.districtTenantCode== '"+property.getTenantId()+"')].city.code", "$.MdmsRes.tenant", requestInfo);
+		String cityCode = codes.get("tenants").get(0);
 		if (isMutation) {
 			ackNo = propertyutil.getIdList(requestInfo, property.getTenantId(), config.getMutationIdGenName(), config.getMutationIdGenFormat(), 1).get(0);
-		} else
+			//ackNo=ackNo.replace("MN-MT", cityCode);
+		}
+		else
+		{
 			ackNo = propertyutil.getIdList(requestInfo, property.getTenantId(), config.getAckIdGenName(), config.getAckIdGenFormat(), 1).get(0);
-
+			ackNo=ackNo.replace("MN-AC", cityCode);
+		}
 		if(property.getCreationReason().equals(CreationReason.UPDATE))
 			pId = property.getPropertyId();
 		else {
 			pId=getPorpertyIdForAmBiMt(requestInfo,property);
 		}
+		
+		
+		
+		
 		property.setPropertyId(pId);
 		property.setId(UUID.randomUUID().toString());
 		property.setAcknowldgementNumber(ackNo);
@@ -793,6 +807,15 @@ public class EnrichmentService {
 
 		String ackNo;
 		ackNo = propertyutil.getIdList(requestInfo, property.getTenantId(), config.getBifurcationIdGenName(), config.getBifurcationIdGenFormat(), 1).get(0);
+
+		//removing mn-ac from acknowledgement number adding city code in place of it
+		List<String> masterNames = new ArrayList<>(
+						Arrays.asList("tenants"));
+		Map<String, List<String>> codes = propertyutil.getAttributeValues(config.getStateLevelTenantId(), "tenant", masterNames,
+						"[?(@.city.districtTenantCode== '"+property.getTenantId()+"')].city.code", "$.MdmsRes.tenant", requestInfo);
+		String cityCode = codes.get("tenants").get(0);
+		//ackNo=ackNo.replace("MN-BF", cityCode);
+		
 		property.setId(UUID.randomUUID().toString());
 		property.setAcknowldgementNumber(ackNo);
 
@@ -892,6 +915,14 @@ public class EnrichmentService {
 
 		String pId = propertyutil.getIdList(requestInfo, tenantId, config.getAppealidname(), config.getAppealidformat(), 1).get(0);
 		String ackNo = propertyutil.getIdList(requestInfo, tenantId, config.getAckIdGenName(), config.getAckIdGenFormat(), 1).get(0);
+
+		//removing mn-ac from acknowledgement number adding city code in place of it
+		List<String> masterNames = new ArrayList<>(
+						Arrays.asList("tenants"));
+		Map<String, List<String>> codes = propertyutil.getAttributeValues(config.getStateLevelTenantId(), "tenant", masterNames,
+						"[?(@.city.districtTenantCode== '"+tenantId+"')].city.code", "$.MdmsRes.tenant", requestInfo);
+		String cityCode = codes.get("tenants").get(0);
+		//ackNo=ackNo.replace("MN-AC", cityCode);
 		appeal.setAppealId(pId);
 		appeal.setAcknowldgementNumber(ackNo);
 	}
