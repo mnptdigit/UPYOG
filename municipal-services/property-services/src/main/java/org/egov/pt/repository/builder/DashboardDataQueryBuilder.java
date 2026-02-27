@@ -64,6 +64,24 @@ public class DashboardDataQueryBuilder {
 			+ ")\r\n"
 			+ "SELECT SUM(approved.approved_count) AS total_approved_count\r\n"
 			+ "FROM approved";
+	
+	public static final String PROPERTIES_REJECTED = "WITH rejected AS (\r\n"
+			+ "  SELECT \r\n"
+			+ "    COUNT(ewpv.businessid) AS rejected_count,\r\n"
+			+ "    ep.tenantid,\r\n"
+			+ "    epadd.ward_no\r\n"
+			+ "  FROM eg_wf_processinstance_v2 ewpv\r\n"
+			+ "  JOIN eg_pt_property ep \r\n"
+			+ "    ON ep.acknowldgementnumber = ewpv.businessid\r\n"
+			+ "  JOIN eg_pt_address epadd \r\n"
+			+ "    ON ep.id = epadd.propertyid\r\n"
+			+ "  WHERE ewpv.\"action\" = 'REJECT' \r\n"
+			+ "  AND ep.status = 'INACTIVE' \r\n"
+			+ "  /*FILTER_CONDITIONS*/\n" 
+			+ "  GROUP BY ep.tenantid, epadd.ward_no\r\n"
+			+ ")\r\n"
+			+ "SELECT SUM(rejected.rejected_count) AS total_rejected_count\r\n"
+			+ "FROM rejected";
 
 	public static final String PROPERTIES_SELF_ASSESSED = "select COUNT(epp.propertyid) AS count\r\n"
 			+ "FROM eg_pt_asmt_assessment epaa\r\n" + "JOIN eg_pt_property epp ON epaa.propertyid = epp.propertyid\r\n"
@@ -98,6 +116,18 @@ public class DashboardDataQueryBuilder {
 			+ "JOIN eg_pg_transactions ept ON epp.propertyid = ept.consumer_code\r\n"
 			+ "JOIN egcl_payment ep ON ept.txn_id = ep.transactionnumber\r\n"
 			+ "WHERE ept.txn_status = 'SUCCESS' AND epp.status = 'ACTIVE'";
+	
+	public static final String TOTAL_TAX_COLLECTED_PROPERTIES ="SELECT \r\n"
+			+ "   ept.txn_id , ept.txn_amount , ept.consumer_code , ept.tenant_id \r\n"
+			+ "FROM eg_pt_property epp\r\n"
+			+ "JOIN eg_pt_address epa \r\n"
+			+ "    ON epp.id = epa.propertyid\r\n"
+			+ "JOIN eg_pg_transactions ept \r\n"
+			+ "    ON epp.propertyid = ept.consumer_code\r\n"
+			+ "JOIN egcl_payment ep \r\n"
+			+ "    ON ept.txn_id = ep.transactionnumber\r\n"
+			+ "WHERE ept.txn_status = 'SUCCESS'\r\n"
+			+ "  AND epp.status = 'ACTIVE'";
 	
 	public static final String PROPERTY_TAX_SHARE="SELECT SUM(ep.totalamountpaid) * 5.0 / 8 as PROPERTY_TAX\r\n"
 			+ "FROM eg_pt_property epp\r\n"
@@ -244,7 +274,7 @@ public class DashboardDataQueryBuilder {
 	
 	public String getTotalPropertyApprovedQuery(DashboardDataSearch dashboardDataSearch) {
 
-		StringBuilder stringBuilder = new StringBuilder(PROPERTIES_APPROVED);
+		StringBuilder stringBuilder = new StringBuilder();
 
 		long fromEpoch, toEpoch;
 		if (!StringUtils.isEmpty(dashboardDataSearch.getFromDate())
@@ -264,16 +294,52 @@ public class DashboardDataQueryBuilder {
 		stringBuilder.append(" AND ewpv.lastmodifiedtime BETWEEN ").append(fromEpoch).append(" AND ").append(toEpoch);
 
 		if (!StringUtils.isEmpty(dashboardDataSearch.getTenantid())) {
-			stringBuilder.append(" AND epp.tenantid = '").append(dashboardDataSearch.getTenantid()).append("'");
+			stringBuilder.append(" AND ep.tenantid = '").append(dashboardDataSearch.getTenantid()).append("'");
 		}
 
 		if (!StringUtils.isEmpty(dashboardDataSearch.getWard())) {
-			stringBuilder.append(" AND epa.ward_no = '").append(dashboardDataSearch.getWard()).append("'");
+			stringBuilder.append(" AND epadd.ward_no = '").append(dashboardDataSearch.getWard()).append("'");
 		} else {
-			stringBuilder.append(" AND epa.ward_no != ''");
+			stringBuilder.append(" AND epadd.ward_no != ''");
 		}
 		
 		String finalQuery = PROPERTIES_APPROVED.replace("/*FILTER_CONDITIONS*/", stringBuilder.toString());
+		System.out.println("finalQuery::"+finalQuery);
+		return finalQuery;
+	}
+	
+	public String getTotalPropertyRejectedQuery(DashboardDataSearch dashboardDataSearch) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		long fromEpoch, toEpoch;
+		if (!StringUtils.isEmpty(dashboardDataSearch.getFromDate())
+				&& !StringUtils.isEmpty(dashboardDataSearch.getToDate())) {
+
+			fromEpoch = getStartOfDayEpochMillis(dashboardDataSearch.getFromDate());
+			toEpoch = getEndOfDayEpochMillis(dashboardDataSearch.getToDate());
+		} else {
+			fromEpoch = getStartOfDayEpochMillis("01-04-2025");
+
+			LocalDate currentDate = LocalDate.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+			String formattedDate = currentDate.format(formatter);
+
+			toEpoch = getEndOfDayEpochMillis(formattedDate);
+		}
+		stringBuilder.append(" AND ewpv.lastmodifiedtime BETWEEN ").append(fromEpoch).append(" AND ").append(toEpoch);
+
+		if (!StringUtils.isEmpty(dashboardDataSearch.getTenantid())) {
+			stringBuilder.append(" AND ep.tenantid = '").append(dashboardDataSearch.getTenantid()).append("'");
+		}
+
+		if (!StringUtils.isEmpty(dashboardDataSearch.getWard())) {
+			stringBuilder.append(" AND epadd.ward_no = '").append(dashboardDataSearch.getWard()).append("'");
+		} else {
+			stringBuilder.append(" AND epadd.ward_no != ''");
+		}
+		
+		String finalQuery = PROPERTIES_REJECTED.replace("/*FILTER_CONDITIONS*/", stringBuilder.toString());
 		System.out.println("finalQuery::"+finalQuery);
 		return finalQuery;
 	}
@@ -451,6 +517,40 @@ public class DashboardDataQueryBuilder {
 	public String getTotalTaxCollectedQuery(DashboardDataSearch dashboardDataSearch) {
 
 		StringBuilder stringBuilder = new StringBuilder(TOTAL_TAX_COLLECTED);
+
+		long fromEpoch, toEpoch;
+		if (!StringUtils.isEmpty(dashboardDataSearch.getFromDate())
+				&& !StringUtils.isEmpty(dashboardDataSearch.getToDate())) {
+
+			fromEpoch = getStartOfDayEpochMillis(dashboardDataSearch.getFromDate());
+			toEpoch = getEndOfDayEpochMillis(dashboardDataSearch.getToDate());
+		} else {
+			fromEpoch = getStartOfDayEpochMillis("01-04-2025");
+
+			LocalDate currentDate = LocalDate.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+			String formattedDate = currentDate.format(formatter);
+
+			toEpoch = getEndOfDayEpochMillis(formattedDate);
+		}
+		stringBuilder.append(" AND ep.createdtime BETWEEN ").append(fromEpoch).append(" AND ").append(toEpoch);
+
+		if (!StringUtils.isEmpty(dashboardDataSearch.getTenantid())) {
+			stringBuilder.append(" AND epp.tenantid = '").append(dashboardDataSearch.getTenantid()).append("'");
+		}
+
+		if (!StringUtils.isEmpty(dashboardDataSearch.getWard())) {
+			stringBuilder.append(" AND epa.ward_no = '").append(dashboardDataSearch.getWard()).append("'");
+		} else {
+			stringBuilder.append(" AND epa.ward_no != ''");
+		}
+
+		return stringBuilder.toString();
+	}
+	
+	public String getTotalTaxCollectedPropertiesQuery(DashboardDataSearch dashboardDataSearch) {
+
+		StringBuilder stringBuilder = new StringBuilder(TOTAL_TAX_COLLECTED_PROPERTIES);
 
 		long fromEpoch, toEpoch;
 		if (!StringUtils.isEmpty(dashboardDataSearch.getFromDate())

@@ -5,12 +5,15 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.pt.models.DashboardDataSearch;
 import org.egov.pt.models.PropertyCriteria;
+import org.egov.pt.models.TaxCollectedProperties;
 import org.egov.pt.repository.builder.DashboardDataQueryBuilder;
+import org.egov.pt.repository.rowmapper.TaxCollectedPropertiesRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -23,6 +26,9 @@ public class DashboardDataRepository {
 	
 	@Autowired
 	JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private TaxCollectedPropertiesRowMapper taxCollectedPropertiesRowMapper;
 	
 	public BigInteger getTotalPropertyRegisteredCount(DashboardDataSearch dashboardDataSearch)
 	{
@@ -48,6 +54,13 @@ public class DashboardDataRepository {
 	public BigInteger getTotalPropertyApprovedCount(DashboardDataSearch dashboardDataSearch)
 	{
 		String query=dashboardDataQueryBuilder.getTotalPropertyApprovedQuery(dashboardDataSearch);
+		BigInteger result = jdbcTemplate.queryForObject(query, BigInteger.class);
+		return result != null ? result : BigInteger.ZERO;
+	}
+	
+	public BigInteger getTotalPropertyRejectedCount(DashboardDataSearch dashboardDataSearch)
+	{
+		String query=dashboardDataQueryBuilder.getTotalPropertyRejectedQuery(dashboardDataSearch);
 		BigInteger result = jdbcTemplate.queryForObject(query, BigInteger.class);
 		return result != null ? result : BigInteger.ZERO;
 	}
@@ -92,6 +105,13 @@ public class DashboardDataRepository {
 		String query=dashboardDataQueryBuilder.getTotalTaxCollectedQuery(dashboardDataSearch);
 		BigDecimal result = jdbcTemplate.queryForObject(query, BigDecimal.class);
 		return result != null ? result : BigDecimal.ZERO;
+	}
+	
+	public List<TaxCollectedProperties> getTotalTaxCollectedProperties(DashboardDataSearch dashboardDataSearch)
+	{
+		String query=dashboardDataQueryBuilder.getTotalTaxCollectedPropertiesQuery(dashboardDataSearch);
+		  List<TaxCollectedProperties> result = jdbcTemplate.query(query, taxCollectedPropertiesRowMapper);
+		return result != null ? result : null;
 	}
 	
 	public BigDecimal getPropertyTaxShareAmount(DashboardDataSearch dashboardDataSearch) {
