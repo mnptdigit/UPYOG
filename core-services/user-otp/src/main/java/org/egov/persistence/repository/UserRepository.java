@@ -35,7 +35,9 @@ public class UserRepository {
             request = new UserSearchRequest(null, tenantId, userType, mobileNumber);
         } else {
             request = new UserSearchRequest(mobileNumber, tenantId, userType, null);
-
+        	//The below is changed for manipur
+        	//request = new UserSearchRequest(null, tenantId, userType, mobileNumber);
+            
         }
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
