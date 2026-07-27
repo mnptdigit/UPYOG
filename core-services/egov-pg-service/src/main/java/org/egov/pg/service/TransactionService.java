@@ -17,6 +17,7 @@ import org.egov.common.contract.request.User;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.pg.config.AppProperties;
 import org.egov.pg.constants.PgConstants;
+import org.egov.pg.models.AuditDetails;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.models.TransactionDump;
 import org.egov.pg.models.TransactionDumpRequest;
@@ -184,10 +185,13 @@ public class TransactionService {
 			paymentsService.registerPayment(request);
 		}
 
+		AuditDetails auditDetails = AuditDetails.builder().createdBy(newTxn.getAuditDetails().getCreatedBy())
+				.createdTime(newTxn.getAuditDetails().getCreatedTime()).lastModifiedBy(requestInfo.getUserInfo().getUuid())
+				.lastModifiedTime(System.currentTimeMillis()).build();
 		TransactionDump dump = TransactionDump.builder()
 				.txnId(currentTxnStatus.getTxnId())
 				.txnResponse(newTxn.getResponseJson())
-				.auditDetails(newTxn.getAuditDetails())
+				.auditDetails(auditDetails)
 				.build();
 
 		producer.push(appProperties.getUpdateTxnTopic(), new org.egov.pg.models.TransactionRequest(requestInfo, newTxn));
@@ -276,8 +280,11 @@ public class TransactionService {
 					paymentsService.registerPayment(request); 
 				}
 
+				AuditDetails auditDetails = AuditDetails.builder().createdBy(newTxn.getAuditDetails().getCreatedBy())
+						.createdTime(newTxn.getAuditDetails().getCreatedTime()).lastModifiedBy(requestInfo.getUserInfo().getUuid())
+						.lastModifiedTime(System.currentTimeMillis()).build();
 				TransactionDump dump=TransactionDump.builder().txnId(currentTxnStatus.getTxnId()).txnResponse(
-						newTxn.getResponseJson()).auditDetails(newTxn.getAuditDetails()) .build();
+						newTxn.getResponseJson()).auditDetails(auditDetails) .build();
 
 				producer.push(appProperties.getUpdateTxnTopic(), new TransactionRequest(requestInfo, newTxn));
 				producer.push(appProperties.getUpdateTxnDumpTopic(), new TransactionDumpRequest(requestInfo, dump)); 

@@ -68,6 +68,13 @@ public class EarlyReconciliationJob implements Job {
                         .txnStatus(Transaction.TxnStatusEnum.PENDING).build(),
                 System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(startTime),
                 System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(endTime));
+        
+        List<Transaction> initiatedTxns = transactionRepository.fetchTransactionsByTimeRange(TransactionCriteria.builder()
+                .txnStatus(Transaction.TxnStatusEnum.INITIATED).build(),
+        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(startTime),
+        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(endTime));
+        
+        pendingTxns.addAll(initiatedTxns);
 
         log.info("Attempting to reconcile {} pending transactions", pendingTxns.size());
 
