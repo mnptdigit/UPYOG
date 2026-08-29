@@ -14,12 +14,10 @@ public class BankModel {
 	private Long id;
 
 	@SafeHtml
-	@NotNull(message = "Code cannot be null")
 	@Length(max = 50)
-	private String code;
+	private String code; // No @NotNull
 
 	@SafeHtml
-	@NotNull(message = "Name cannot be null")
 	@Length(max = 100)
 	private String name;
 
@@ -27,8 +25,7 @@ public class BankModel {
 	@Length(max = 250)
 	private String narration;
 
-	@NotNull
-	private Boolean isactive;
+	private Boolean isactive; // No @NotNull
 
 	@SafeHtml
 	@Length(max = 50)

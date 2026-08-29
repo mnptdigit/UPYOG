@@ -16,7 +16,13 @@ public class AccountDetailTypeModel {
     private String description;
 
     @SafeHtml
-    private String tableName;
+    private String tablename;
+    
+	private String columnname;
+    
+	private String attributename;
+    
+	private int nbroflevels;
 
     @SafeHtml
     private String fullyQualifiedName;

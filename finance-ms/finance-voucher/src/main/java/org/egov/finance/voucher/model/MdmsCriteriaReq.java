@@ -13,13 +13,19 @@ import lombok.Data;
 @Data
 @Builder
 public class MdmsCriteriaReq {
-	
 
 	@JsonProperty("RequestInfo")
 	private RequestInfo requestInfo;
-	
 
 	@JsonProperty("MdmsCriteria")
 	private MdmsCriteria mdmsCriteria;
-	
+
+	public MdmsCriteriaReq(RequestInfo requestInfo, MdmsCriteria mdmsCriteria) {
+		this.requestInfo = requestInfo;
+		this.mdmsCriteria = mdmsCriteria;
+	}
+
+	public MdmsCriteriaReq() {
+	}
+
 }

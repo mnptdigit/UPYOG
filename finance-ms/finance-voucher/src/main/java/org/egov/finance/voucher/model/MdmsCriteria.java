@@ -15,4 +15,13 @@ import lombok.Data;
 public class MdmsCriteria {
 	private String tenantId;
     private List<ModuleDetail> moduleDetails;
+    
+
+    public MdmsCriteria(String tenantId, List<ModuleDetail> moduleDetails) {
+        this.tenantId = tenantId;
+        this.moduleDetails = moduleDetails;
+    }
+    
+    public MdmsCriteria(){}
+
 }

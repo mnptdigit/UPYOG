@@ -11,21 +11,21 @@ import lombok.Data;
 @Data
 public class BankbranchModel {
 
-	private Integer id;
-	private Integer bankId;
+	private Long id; 
+	private Long bankId;
 
 	@SafeHtml
-	@NotNull
+	//@NotNull
 	@Length(max = 50)
 	private String branchcode;
 
 	@SafeHtml
-	@NotNull
+	//@NotNull
 	@Length(max = 50)
 	private String branchname;
 
 	@SafeHtml
-	@NotNull
+	//@NotNull
 	@Length(max = 50)
 	private String branchaddress1;
 
@@ -57,7 +57,7 @@ public class BankbranchModel {
 	@Length(max = 50)
 	private String contactperson;
 
-	@NotNull
+	//@NotNull
 	private Boolean isactive;
 
 	@SafeHtml

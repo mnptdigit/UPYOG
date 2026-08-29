@@ -15,7 +15,7 @@ public class BankRequest {
 	private RequestInfo requestInfo;
 
 	@Valid
-	@JsonProperty("Bank")
+	@JsonProperty("bank")
 	private BankModel bank;
 
 }

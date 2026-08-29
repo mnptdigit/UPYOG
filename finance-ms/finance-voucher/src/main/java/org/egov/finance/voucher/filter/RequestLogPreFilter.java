@@ -61,7 +61,11 @@ public class RequestLogPreFilter implements Filter {
 				Long userId = userIdNode.asLong();
 				ApplicationThreadLocals.setCurrentUserId(userId);
 			}
-
+			JsonNode userAuthToken = root.path("RequestInfo").path("authToken");
+			if (!userAuthToken.isMissingNode()) {
+				String token = userAuthToken.asText();
+				ApplicationThreadLocals.setUserToken(token);
+			}
 		} catch (Exception e) {
 			log.warn("Could not extract RequestInfo from body: {}", e.getMessage());
 		}

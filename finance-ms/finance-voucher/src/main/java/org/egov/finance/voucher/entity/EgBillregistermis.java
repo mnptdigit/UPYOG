@@ -25,6 +25,7 @@ import lombok.Data;
 @Table(name = "EG_BILLREGISTERMIS")
 @SequenceGenerator(name = EgBillregistermis.SEQ_EG_BILLREGISTERMIS, sequenceName = EgBillregistermis.SEQ_EG_BILLREGISTERMIS, allocationSize = 1)
 @Data
+
 public class EgBillregistermis extends AuditDetailswithVersion implements Serializable {
 	
 	 private static final long serialVersionUID = -4947159761135531623L;
@@ -208,6 +209,7 @@ public class EgBillregistermis extends AuditDetailswithVersion implements Serial
 	        partyBillDate = ptyBillDate;
 	        inwardSerialNumber = inwrdSlNumber;
 	    }
-
+	    public EgBillregistermis() {
+	    }
 
 }

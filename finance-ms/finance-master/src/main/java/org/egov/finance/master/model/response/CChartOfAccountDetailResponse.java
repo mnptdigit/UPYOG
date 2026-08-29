@@ -2,7 +2,7 @@ package org.egov.finance.master.model.response;
 
 import java.util.List;
 
-import org.egov.finance.master.entity.CChartOfAccountDetail;
+import org.egov.finance.master.model.ChartOfAccountDetailModel;
 import org.egov.finance.master.model.ResponseInfo;
 
 import lombok.AllArgsConstructor;
@@ -17,6 +17,6 @@ import lombok.NoArgsConstructor;
 public class CChartOfAccountDetailResponse {
 
 	private ResponseInfo responseInfo;
-	private List<CChartOfAccountDetail> accountDetailList;
+	private List<ChartOfAccountDetailModel> chartOfAccountDetails;
 
 }

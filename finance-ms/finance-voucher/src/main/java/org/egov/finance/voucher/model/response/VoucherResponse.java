@@ -27,6 +27,8 @@ public class VoucherResponse {
 	@JsonProperty("ResponseInfo")
 	private ResponseInfo responseInfo;
 
+	private String message;
+
 	// private PageContract page;
 
 }

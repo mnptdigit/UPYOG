@@ -48,16 +48,9 @@ public class VoucherController {
 	@Autowired
 	private VoucherCreateService voucherCreateService;
 
-//	@PostMapping("/journalvoucher/_create")
-//	public ResponseEntity<VoucherResponse> createJournalVoucher(@RequestBody JournalVoucherRequest request) {
-//	    try {
-//	        JournalVoucherResponse response = journalVoucherService.createJournalVoucher(request);
-//	        return ResponseEntity.ok().body(response);
-//	    } catch (ValidationException e) {
-//	        throw new CustomBadRequestException("Validation Failed", e.getMessage());
-//	    }
-//	}
-
+	/**
+	 * API to create voucher
+	 */
 	@PostMapping("/_create")
 	public ResponseEntity<VoucherResponse> createVoucher(@Valid @RequestBody VoucherRequest voucherRequest) {
 		VoucherResponse response = voucherCreateService.processVoucherCreate(voucherRequest);

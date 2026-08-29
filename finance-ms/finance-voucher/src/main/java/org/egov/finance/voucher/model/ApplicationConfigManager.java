@@ -20,8 +20,15 @@ public class ApplicationConfigManager {
 	@Value("${egov.default.services.endpoint}")
 	private String egovSerHost;
 
+	@Value("${egov.mdms.service.endpoint:}")
+	private String egovMdmsSerHost;
+
 	public String getEgovUserSerHost() {
 		return StringUtils.isNotBlank(egovUserSerHost) ? egovUserSerHost : egovSerHost;
+	}
+
+	public String getEgovMdmsSerHost() {
+		return StringUtils.isNotBlank(egovMdmsSerHost) ? egovMdmsSerHost : egovSerHost;
 	}
 
 }

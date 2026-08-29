@@ -26,11 +26,11 @@ public class EgPartytype implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // or use appropriate strategy
+    @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "parentid") // Adjust the column name as per your DB schema
+    @JoinColumn(name = "parentid") 
     private EgPartytype egPartytype;
 
     private String code;

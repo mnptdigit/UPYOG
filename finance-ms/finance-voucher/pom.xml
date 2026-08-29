@@ -61,6 +61,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version> <!-- or latest stable -->
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
@@ -91,13 +96,24 @@
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>8.1</version>
 		</dependency>
-		
-		
-			<dependency>
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-envers</artifactId>
-    <version>6.4.4.Final</version> <!-- Or match your Hibernate ORM version -->
-</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+			<version>6.2.2</version> <!-- Compatible with Spring Boot 3.x and Java 17 -->
+		</dependency>
+
+		<!-- Spring Security Web (for SecurityContextHolder and Authentication) -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>6.2.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-envers</artifactId>
+			<version>6.4.4.Final</version> <!-- Or match your Hibernate ORM version -->
+		</dependency>
 
 	</dependencies>
 

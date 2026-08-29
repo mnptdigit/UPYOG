@@ -32,15 +32,14 @@ public class CChartOfAccountDetail extends AuditDetailswithVersion {
 	@GeneratedValue(generator = SEQ_CHARTOFACCOUNTDETAIL, strategy = GenerationType.SEQUENCE)
 	private Long id;
 
-	@JoinTable
 	@ManyToOne
 	@JoinColumn(name = "glcodeid")
 	@NotNull
 	private CChartOfAccounts glCodeId;
 
-	@JoinTable
 	@ManyToOne
 	@JoinColumn(name = "detailtypeid")
 	@NotNull
 	private AccountDetailType detailTypeId;
+
 }

@@ -32,6 +32,12 @@ public class SpecificationHelper {
 		return typedPath;
 	}
 
+	// For equality (case-insensitive for Strings)
+	public static <T> Specification<T> equalIgnoreCase(String fieldName, String value) {
+		return (root, query, cb) -> value == null ? cb.conjunction()
+				: cb.equal(cb.lower(root.get(fieldName)), value.trim().toLowerCase());
+	}
+
 	public static <T, Y> Specification<T> equal(String fieldPath, Y value) {
 		return (root, query, cb) -> value == null ? cb.conjunction()
 				: cb.equal(getPath(root, fieldPath, value.getClass()), value);
@@ -73,6 +79,20 @@ public class SpecificationHelper {
 				return cb.lessThanOrEqualTo(path, to);
 			}
 		};
+	}
+
+	// ========================= NEW METHODS ========================= //
+
+	// Not equal (case-insensitive for String)
+	public static <T> Specification<T> notEqualIgnoreCase(String fieldPath, String value) {
+		return (root, query, cb) -> value == null ? cb.conjunction()
+				: cb.notEqual(cb.lower(getPath(root, fieldPath, String.class)), value.trim().toLowerCase());
+	}
+
+	// Generic Not Equal
+	public static <T, Y> Specification<T> notEqual(String fieldPath, Y value) {
+		return (root, query, cb) -> value == null ? cb.conjunction()
+				: cb.notEqual(getPath(root, fieldPath, value.getClass()), value);
 	}
 
 	/*

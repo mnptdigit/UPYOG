@@ -22,12 +22,14 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 @Entity
 @Table(name = "eg_designation")
 @Unique(fields = { "name", "code" }, enableDfltMsg = true)
 
 @NamedQuery(name = "getDesignationForListOfDesgNames", query = "from Designation where trim(upper(name)) in(:param_0)")
+@Data
 public class Designation extends AuditDetailswithVersion {
 
 	public static final String SEQ_DESIGNATION = "SEQ_EG_DESIGNATION";
