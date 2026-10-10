@@ -111,7 +111,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
             actionButton={<ActionButton jumpTo={`/digit-ui/citizen/pt/property/${typeOfApplication}/pincode`} />}
           />
           <Row
-            label={t("PT_PROOF_OF_ADDRESS_SUB_HEADER")}
+            label={t("PT_PROOF_IDENTITY_HEADER")}
             text={`${(address?.documents?.ProofOfAddress?.name && getFixedFilename(address.documents.ProofOfAddress.name)) || (address?.documents?.ProofOfAddress?.documentType?.i18nKey ? t(address?.documents?.ProofOfAddress?.documentType?.i18nKey) : "na")}`}
             actionButton={<ActionButton jumpTo={`/digit-ui/citizen/pt/property/${typeOfApplication}/proof`} />}
           />
@@ -268,7 +268,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                         ""
                       )}
                       <Row
-                        label={t("PT_PROOF_IDENTITY_HEADER")}
+                        label={t("PT_PROOF_OF_ADDRESS_HEADER")}
                         text={`${(owner?.documents["proofIdentity"]?.name && getFixedFilename(owner.documents["proofIdentity"].name)) || (owner?.documents?.proofIdentity?.documentType?.i18nKey ? t(owner?.documents?.proofIdentity?.documentType?.i18nKey) : "na")}`}
                         actionButton={<ActionButton jumpTo={`${`/digit-ui/citizen/pt/property/${typeOfApplication}/proof-of-identity/`}${index}`} />}
                       />

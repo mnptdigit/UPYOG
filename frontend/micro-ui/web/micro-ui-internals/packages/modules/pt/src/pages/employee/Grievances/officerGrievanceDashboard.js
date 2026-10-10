@@ -10,11 +10,15 @@ const EmployeeGrievanceDashboard = ({path}) => {
     const { t } = useTranslation();
     const history = useHistory();
     const [activeIndex, setActiveIndex] = useState(null);
+    const userInfos = sessionStorage.getItem("Digit.citizen.userRequestObject");
+    const userInfo = userInfos ? JSON.parse(userInfos) : {};
+    const userInformation = userInfo?.value?.info;
+    console.log("userInformation==",userInformation);
     const [userDetails, setUserDetails] = useState({
-        "id": "16",
-        "name": "Ajay Singh",
-        "mobileNo": "9999999910",
-        "email": "asingh@gmail.com",
+        "id": userInformation?.uuid || '',
+        "name": userInformation?.name || '',
+        "mobileNo": userInformation?.mobileNumber || '',
+        "email": userInformation?.emailId || '',
         "address": null,
         "gender": null,
         "userType": "GRO",
@@ -87,24 +91,27 @@ const EmployeeGrievanceDashboard = ({path}) => {
 
     const fetchGrievances = () => {
         // Mock data for grievances
-
+        const hasRestrictedRole = userInformation?.roles?.some(role =>
+            ["SUPERUSER", "EMPLOYEE_ADMIN", "MNPTB_DIRECTOR"].includes(role.code)
+        );
        let reqObj = {};
-        if(userDetails?.userType=='Nodal') {
+        if(hasRestrictedRole) {
         reqObj = {
             "data": {
-                "user_type": 'Nodal',
-                orgcode: userDetails?.organization || ''
+                "user_type": 'Admin'
             }
         }
-        }else if(userDetails?.userType=='Appellate Officer' || userDetails?.userType=='Sub-Appellate Officer') {
-        reqObj = {
-            "data": {
-                "user_type": userDetails?.userType,
-                orgcode: userDetails?.organization || '',
-                "assign_to": userDetails?.id || ''
-            }
         }
-        } else {
+        // else if(userDetails?.userType=='Appellate Officer' || userDetails?.userType=='Sub-Appellate Officer') {
+        // reqObj = {
+        //     "data": {
+        //         "user_type": userDetails?.userType,
+        //         orgcode: userDetails?.organization || '',
+        //         "assign_to": userDetails?.id || ''
+        //     }
+        // }
+        // } 
+        else {
         reqObj = {
             "data": {
                 "assign_to": userDetails?.id || ''

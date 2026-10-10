@@ -6,9 +6,13 @@ import { Switch, useLocation, Link, useNavigate, useHistory } from "react-router
 const FileGrievance = ({
   
 }) => {
-    const tenantId = Digit.ULBService.getCurrentTenantId();
+    // const tenantId = Digit.ULBService.getCurrentTenantId();
+     const tenantId = Digit.ULBService.getCitizenCurrentTenant();
     const history = useHistory();
 
+      const { isLoading, isError, error, data, ...rest } = Digit.Hooks.hrms.useHRMSSearch({ roles: 'PT_FIELD_INSPECTOR' }, 'mn.andro', null);
+    console.log("useHRMSSearch==",isLoading, isError, error, data, rest);
+    console.log("tenantId==",tenantId);
     const { t } = useTranslation();
     const [activeIndex, setActiveIndex] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
@@ -22,13 +26,17 @@ const FileGrievance = ({
     const [nlpSearchData, setNlpSearchData] = useState({});
     const [type, setType] = useState(null); // true for suggestion, false for grievance
     const [formData, setFormData] = useState({});
+    const userInfos = sessionStorage.getItem("Digit.citizen.userRequestObject");
+    const userInfo = userInfos ? JSON.parse(userInfos) : {};
+    const userInformation = userInfo?.value?.info;
+    console.log("userInformation==",userInformation);
     const [userDetails, setUserDetails] = useState( {
-                "id": "15",
-                "name": "Robin Sharma",
-                "mobileNo": "9999999999",
-                "email": "Robin@gmail.com",
+                "id": userInformation?.uuid || '',
+                "name": userInformation?.name || '',
+                "mobileNo": userInformation?.mobileNumber || '',
+                "email": userInformation?.emailId || '',
                 "address": null,
-                "gender": "Male",
+                "gender": null,
                 "userType": "Citizen",
                 "password": "123456",
                 "column_1": null,
@@ -261,8 +269,15 @@ const FileGrievance = ({
             }
 
             // Get user ID from context (default to empty, should be set from auth context)
-            const userId = '15'; // This should come from Digit.ULBService.getCurrentUser() or similar
-
+            const userId = userInformation?.uuid || ''; // This should come from Digit.ULBService.getCurrentUser() or similar
+            
+            let assignTo = null;
+            if(data && data.Employees && data.Employees.length > 0){
+                assignTo = data.Employees[0].id; // Assuming the first employee is the one to assign to
+            } else {
+                alert('No PT_FIELD_INSPECTOR found in HRMS for this tenant. Please contact support.');
+                return;
+            }
             // Prepare the submission data object matching exact payload structure
             const submissionData = {
                 // Contact information
@@ -292,7 +307,9 @@ const FileGrievance = ({
                 
                 // Department and category details
                 deptid: suggestedDept?.stage_3_details?.id?.toString() || '',
-                assign_to: suggestedDept?.stage_3_details?.monitoringcode?.toString() || '',
+                assign_to: '2e07957c-60c1-46ba-ae0a-1fa277ede7e0', // Hardcoded for now, should be dynamic based on HRMS search
+                // assignTo,
+                // suggestedDept?.stage_3_details?.monitoringcode?.toString() || '',
                 
                 // NLP extracted data (should be arrays, not stringified)
                 probable_resolution: Array.isArray(nlpSearchData?.probable_resolution) 

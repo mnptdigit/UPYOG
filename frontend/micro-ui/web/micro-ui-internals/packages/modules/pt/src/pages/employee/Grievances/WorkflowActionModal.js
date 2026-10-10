@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from "../../../config/apiConfig";
+import { useTranslation } from 'react-i18next';
 
 const WorkflowActionModal = ({
     isOpen,
@@ -11,12 +12,21 @@ const WorkflowActionModal = ({
     userDetails = null,
     currentAssignTo = null
 }) => {
+    const { t } = useTranslation();
+    const [selectedCity, setSelectedCity] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
     const [comments, setComments] = useState('');
     const [file, setFile] = useState(null);
     const [errors, setErrors] = useState({});
     const [groList, setGroList] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    const cities = sessionStorage.getItem("Digit.PT_TENANTS");
+    const cityList = cities ? JSON.parse(cities) : {};
+    const cityListData = cityList?.value;
+    const [cityCode, setCityCode] = useState(null);
+    const { isLoading, isError, error, data, ...rest } = Digit.Hooks.hrms.useHRMSSearch({  }, cityCode, null);
+
+    console.log("cityListData==",cityListData)
 
     const needsAssignee = () => {
         return action === 'Forward' || action === 'Forward to Sub-Appellate Officer';
@@ -78,7 +88,7 @@ const WorkflowActionModal = ({
     }, [isOpen, action, userDetails, currentAssignTo]);
 
     // Determine which options to use: fetched groList for Forward, or passed assigneeOptions
-    const effectiveOptions = needsAssignee() ? groList : assigneeOptions;
+    // const effectiveOptions = needsAssignee() ? groList : assigneeOptions;
 
     const handleFileChange = (event) => {
         setFile(event.target.files[0] || null);
@@ -88,6 +98,9 @@ const WorkflowActionModal = ({
         const newErrors = {};
         if (needsAssignee() && !selectedAssignee) {
             newErrors.assignee = 'This field is required';
+        }
+        if (needsAssignee() && !selectedCity) {
+            newErrors.city = 'This field is required';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -117,6 +130,7 @@ const WorkflowActionModal = ({
     };
 
     const resetForm = () => {
+        setSelectedCity('');
         setSelectedAssignee('');
         setComments('');
         setFile(null);
@@ -155,6 +169,24 @@ const WorkflowActionModal = ({
         return placeholderMap[action] || 'Select Option';
     };
 
+    const getEmployeeList = async (cityCode) => {
+        console.log("Fetching employee list for cityCode:", cityCode);
+
+        if (!cityCode) return;
+         setCityCode(cityCode);
+    }
+    const effectiveOptions = (data?.Employees || [])
+    .filter(employee =>
+        !employee.user?.roles?.some(
+            role => role.code === "ASSIGNING_OFFICER"
+        )
+    )
+    .map(employee => ({
+        id: employee.uuid,
+        name: `${employee.user?.name || ""} - ${
+            t("WF_ROLE_"+employee.user?.roles?.[0]?.code) || "Employee"
+        }`
+    }));
     return (
         <div style={{
             position: 'fixed',
@@ -207,6 +239,57 @@ const WorkflowActionModal = ({
 
                 {/* Body */}
                 <div style={{ padding: '5px 20px' }}>
+                    {/* Select Field - Only for Forward actions */}
+                    {needsAssignee() && (
+                    <div style={{ marginBottom: '25px' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            marginBottom: '8px',
+                            color: '#212121'
+                        }}>
+                            Select City<span style={{ color: '#d32f2f' }}>*</span>
+                        </label>
+                        <select
+                            value={selectedCity}
+                            onChange={(e) => {
+                                setSelectedCity(e.target.value);
+                                if (errors.city) setErrors(prev => ({ ...prev, city: null }));
+                                getEmployeeList(e.target.value);
+                            }}
+                            disabled={isSubmitting || isLoadingUsers}
+                            style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                border: errors.city ? '2px solid #d32f2f' : '1px solid #bbb',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                boxSizing: 'border-box',
+                                backgroundColor: 'white',
+                                cursor: (isSubmitting || isLoadingUsers) ? 'not-allowed' : 'pointer',
+                                opacity: (isSubmitting || isLoadingUsers) ? 0.6 : 1
+                            }}
+                        >
+                            <option value="">{isLoadingUsers ? '-- Loading... --' : `-- Select City --`}</option>
+                            {cityListData.map((option) => (
+                                <option key={option.code} value={option.code}>
+                                    {option.description}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.city && (
+                            <div style={{
+                                color: '#d32f2f',
+                                fontSize: '12px',
+                                marginTop: '5px',
+                                fontWeight: '500'
+                            }}>
+                                {errors.city}
+                            </div>
+                        )}
+                    </div>
+                    )}
                     {/* Select Field - Only for Forward actions */}
                     {needsAssignee() && (
                     <div style={{ marginBottom: '25px' }}>

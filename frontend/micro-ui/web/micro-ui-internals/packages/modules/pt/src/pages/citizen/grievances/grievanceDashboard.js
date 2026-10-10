@@ -23,6 +23,10 @@ const CitizenGrievanceDashboard = ({
     const [dataList, setDataList] = useState([]);
     const [page, setPage] = useState(1);
     const rowsPerPage = 10;
+    const userInfos = sessionStorage.getItem("Digit.citizen.userRequestObject");
+    const userInfo = userInfos ? JSON.parse(userInfos) : {};
+    const userInformation = userInfo?.value?.info;
+    console.log("userInformation==",userInformation);
 
     useEffect(() => {
         // Fetch grievances data here and set it to state
@@ -46,7 +50,7 @@ const CitizenGrievanceDashboard = ({
 
         let reqObj = {
             "data": {
-                "userId": 15 || ''
+                "userId": userInformation?.uuid || ''
             }
         }
         fetch(API_ENDPOINTS.GRIEVANCE_SEARCH, {

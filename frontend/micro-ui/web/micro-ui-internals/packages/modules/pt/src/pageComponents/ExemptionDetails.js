@@ -1,4 +1,4 @@
-import { CardLabel,LabelFieldPair, TextInput, CardLabelError, RadioButtons, Dropdown, UploadFile  } from "@upyog/digit-ui-react-components";
+import { CardLabel,LabelFieldPair, TextInput, CardLabelError, RadioButtons, Dropdown, UploadFile, CardLabelDesc  } from "@upyog/digit-ui-react-components";
 
 import  FormStep  from "../../../../react-components/src/molecules/FormStep";
 import React, { useEffect, useState } from "react";
@@ -184,6 +184,7 @@ const ExemptionDetails = ({ t, config, onSelect, value, userType, formData, setE
           t={t}
           isDisabled={isAllowedNext()}
         >
+          <CardLabelDesc style={{fontSize: "12px", fontFamily: "sans-serif", fontStyle:"italic"}}>{t(`Any category of commercially used property/portion/areas shall not be included in exemption`)}</CardLabelDesc>
           <CardLabel>{`${t("PT_ELIGIBLE_FOR_EXEMPTION")}*`}</CardLabel>
           <RadioButtons
             t={t}

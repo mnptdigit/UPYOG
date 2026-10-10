@@ -12,10 +12,9 @@ const UserManagement = ({codes=null}) => {
     const history = useHistory();
     const tenantId = Digit.ULBService.getCurrentTenantId();
     const employeeTypes = [
-        { name: "Document Verifier", code: "Document Verifier" },
-        { name: "Field Inspector", code: "Field Inspector" },
-        { name: "Approver", code: "Approver" },
-        {name: "Executing Officer", code: "Executing Officer"},
+        { name: "Document Verifier", code: "PT_DOC_VERIFIER" },
+        { name: "Field Inspector", code: "PT_FIELD_INSPECTOR" },
+        { name: "Approver", code: "PT_APPROVER" },
     ];
     const { data: cities, isLoading } = Digit.Hooks.useTenants();
     console.log("cities==", cities);
@@ -130,7 +129,9 @@ const UserManagement = ({codes=null}) => {
                 }
             });
             } else {
-              Digit.HRMSService.search(tenantId, null, filters).then((result) => {
+              let roles= "PT_DOC_VERIFIER,PT_FIELD_INSPECTOR,PT_APPROVER";
+              filters={tenantId: ulb?.code || tenantId, roles: roles, ...filters};
+              Digit.HRMSService.search_codes(null, null, filters).then((result) => {
                 if (result?.Employees?.length > 0) {
                     const employeeData = result.Employees;
                     formatData(employeeData);
@@ -166,7 +167,7 @@ const UserManagement = ({codes=null}) => {
         const filteredUsers =
         userDataList?.length > 0
             ? userDataList.filter((employee) => {
-                if (filters.employeeType && employee?.employeeType !== filters.employeeType) return false;
+                if (filters.employeeType && employee?.code !== filters.employeeType) return false;
                 if (filters.name && !employee?.name?.toLowerCase().includes(filters.name.toLowerCase())) return false;
                 if (filters.email && !employee?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
                 if (filters.mobileNo && !String(employee?.mobileNo || "").includes(String(filters.mobileNo))) return false;

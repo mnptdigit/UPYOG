@@ -8,7 +8,8 @@ const TransfererDetails = ({ userType, formData, config, onSelect }) => {
   const { t } = useTranslation();
   const propertyDetails = userType === "employee" ? formData.originalData : formData.searchResult.property;
   const ownershipType = propertyDetails?.ownershipCategory?.split?.(".");
-
+  console.log("TransfererDetails formData==", formData);
+  console.log("TransfererDetails config==", config);
   if (userType === "employee") {
     return (
       <React.Fragment>

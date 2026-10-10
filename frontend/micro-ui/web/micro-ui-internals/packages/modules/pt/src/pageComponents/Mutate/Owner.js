@@ -111,7 +111,7 @@ const config = [
     component: "SelectProofIdentity",
     texts: {
       headerCaption: "PT_OWNERS_DETAILS",
-      header: "PT_PROOF_IDENTITY_HEADER",
+      header: "PT_PROOF_OF_ADDRESS_HEADER",
       cardText: "",
       submitBarLabel: "PT_COMMON_NEXT",
       addMultipleText: "PT_COMMON_ADD_APPLICANT_LABEL",

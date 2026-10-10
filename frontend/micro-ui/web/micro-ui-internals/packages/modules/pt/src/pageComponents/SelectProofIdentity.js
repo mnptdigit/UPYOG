@@ -9,6 +9,12 @@ const SelectProofIdentity = ({ t, config, onSelect, userType, formData, ownerInd
   // const editScreen = url.includes("/modify-application/");
   const isMutation = url.includes("property-mutation");
 
+   console.log("SelectProofIdentity formData==", formData);
+
+  console.log("SelectProofIdentity config==", config);
+
+  console.log("isMutation ==", isMutation);
+
   let index = isMutation ? ownerIndex : window.location.href.charAt(window.location.href.length - 1);
 
   const [uploadedFile, setUploadedFile] = useState(() => formData?.owners[index]?.documents?.proofIdentity?.fileStoreId || null);

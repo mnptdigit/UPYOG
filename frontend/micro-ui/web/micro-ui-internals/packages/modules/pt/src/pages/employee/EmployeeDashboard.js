@@ -8,6 +8,7 @@ import { ServiceBasedDashboard } from "./ServiceBasedDashboard";
 import { RevenueBasedDashboard } from "./RevenueBasedDashboard";
 import { LegacyULBDetails } from "./LegacyULBDetails";
 import UserManagement from "./UserManagement";
+import EmployeeGrievanceDashboard from "./Grievances/officerGrievanceDashboard";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -158,6 +159,9 @@ const EmployeeDashboard = (props) => {
                 </li>
                 <li className={mainActiveTab === "usermanagement" ? "active" : ""}>
                     <a href="#" onClick={(e) => { e.preventDefault(); setMainActiveTab("usermanagement"); }}>User Management</a>
+                </li>
+                <li className={mainActiveTab === "grievance" ? "active" : ""}>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setMainActiveTab("grievance"); }}>Grievance</a>
                 </li>
                 {/* <li className={mainActiveTab === "legacyULB" ? "active" : ""}>
                     <a href="#" onClick={(e) => { e.preventDefault(); setMainActiveTab("legacyULB"); }}>Legacy ULB</a>
@@ -327,6 +331,11 @@ const EmployeeDashboard = (props) => {
                   {mainActiveTab === "usermanagement" && (
                     <div className="tab-pane active" id="usermanagement">
                       <UserManagement codes={'EXECUTING_OFFICER'} />
+                    </div>
+                  )}
+                  {mainActiveTab === "grievance" && (
+                    <div className="tab-pane active" id="grievance">
+                        <EmployeeGrievanceDashboard />
                     </div>
                   )}
                   {/* {mainActiveTab === "legacyULB" && (

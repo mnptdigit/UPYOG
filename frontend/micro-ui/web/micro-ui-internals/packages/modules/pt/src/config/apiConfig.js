@@ -1,5 +1,7 @@
 // API Configuration
-export const API_BASE_URL = "https://cpgram.pgrdigit.in/mnptb/api";
+export const API_BASE_URL = "https://cpgram.pgrdigit.in/gjcm/api"
+// "https://aus-showed-truck-vegas.trycloudflare.com/api";
+// "https://cpgram.pgrdigit.in/gjcm/api"
 
 // Specific endpoints
 export const API_ENDPOINTS = {

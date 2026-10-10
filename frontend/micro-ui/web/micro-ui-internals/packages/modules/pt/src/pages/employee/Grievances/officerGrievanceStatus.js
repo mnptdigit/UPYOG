@@ -9,15 +9,21 @@ const EmployeeGrievanceStatus = ({ isTracking = false }) => {
     const { grievanceId } = useParams();
     const history = useHistory();
     const { t } = useTranslation();
+    const [assinerAssigneeDetails, setAssinerAssigneeDetails] = useState([]);
+    
 
     // State management
     const [grievanceData, setGrievanceData] = useState(null);
     const [voicecallDetails, setVoicecallDetails] = useState([]);
+    const userInfos = sessionStorage.getItem("Digit.citizen.userRequestObject");
+    const userInfo = userInfos ? JSON.parse(userInfos) : {};
+    const userInformation = userInfo?.value?.info;
+    console.log("userInformation==",userInformation);
     const [userDetails, setUserDetails] = useState({
-        "id": "16",
-        "name": "Ajay Singh",
-        "mobileNo": "9999999910",
-        "email": "asingh@gmail.com",
+        "id": userInformation?.uuid || '',
+        "name": userInformation?.name || '',
+        "mobileNo": userInformation?.mobileNumber || '',
+        "email": userInformation?.emailId || '',
         "address": null,
         "gender": null,
         "userType": "GRO",
@@ -110,7 +116,7 @@ const EmployeeGrievanceStatus = ({ isTracking = false }) => {
                 body: JSON.stringify(reqObj)
             })
             .then(res => res.json())
-            .then(data => {
+            .then(async data => {
                 if (!isMountedRef.current) return;
                 setIsLoading(false);
                 if (data && data.success && data.response && data.response.length > 0) {
@@ -119,6 +125,48 @@ const EmployeeGrievanceStatus = ({ isTracking = false }) => {
                     // Format data
                     grievance.field_details = grievance.field_1 || [];
                     grievance.raised_on = new Date(grievance.created_at).toDateString();
+                    if (grievance?.workflowDetails && grievance.workflowDetails.length > 0) {
+                        const uuids = [
+                            ...new Set(
+                                grievance.workflowDetails.flatMap((step) => [
+                                    step.assign_by,
+                                    step.assign_to
+                                ]).filter(Boolean)
+                            )
+                        ];
+
+                        console.log(uuids);
+                        const userDetails = await Digit.UserService.userSearch(null, { uuid: uuids }, {});
+                        console.log("userDetails==",userDetails);
+                        if (userDetails && userDetails.user && userDetails.user.length > 0) {
+                            setAssinerAssigneeDetails(userDetails.user);
+                            const employees = userDetails.user || [];
+                            (grievance.workflowDetails || []).map(step => {
+                                const assignByEmployee = employees.find(employee => employee.uuid == step.assign_by);
+                                const assignToEmployee = employees.find(employee => employee.uuid == step.assign_to);
+                                step.assign_by_employee_email = assignByEmployee && assignByEmployee.emailId || null;
+                                step.assign_by_employee_mobile_no = assignByEmployee && assignByEmployee.mobileNumber || null;
+                                step.assign_by_employee_name = assignByEmployee && assignByEmployee.name || null;
+                                step.assign_by_employee_type = assignByEmployee && assignByEmployee.type || null;
+                                step.employee_email = assignToEmployee && assignToEmployee.emailId || null;
+                                step.employee_mobile_no = assignToEmployee && assignToEmployee.mobileNumber || null;
+                                step.employee_name = assignToEmployee && assignToEmployee.name || null;
+                                step.employee_type = assignToEmployee && assignToEmployee.type || null;
+                            });                        
+                        }
+                        console.log("grievance======",grievance);
+
+                        setGrievanceData(grievance);
+                        setGrievanceTableId(grievance.id);
+
+                        // Find similar grievances if not citizen
+                        if (userDetails?.userType !== 'Citizen') {
+                            findSimilarGrievances(grievance.description_en);
+                        }
+
+                        // Mark approved steps
+                        markApprovedSteps(grievance);
+                    }
                     setGrievanceData(grievance);
                     setGrievanceTableId(grievance.id);
 

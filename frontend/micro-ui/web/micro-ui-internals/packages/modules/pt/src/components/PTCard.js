@@ -80,12 +80,12 @@ const PTCard = () => {
       label: t("Search Appeal"),
       link: `/digit-ui/employee/pt/appeal-search`,
       image: "https://mnptapp-terraform.s3.ap-south-1.amazonaws.com/images/Property-Transfer.png",
-    }
-    // {
-    //   label: t("Grievances"),
-    //   link: `/digit-ui/employee/pt/grievances`,
-    //   image: "https://mnptapp-terraform.s3.ap-south-1.amazonaws.com/images/Property-Transfer.png",
-    // },
+    },
+    {
+      label: t("Grievances"),
+      link: `/digit-ui/employee/pt/grievances`,
+      image: "https://mnptapp-terraform.s3.ap-south-1.amazonaws.com/images/Property-Transfer.png",
+    },
   ]
   if(userRole && userRole=='EXECUTING_OFFICER') {
     links.push({

@@ -51,6 +51,7 @@ const ApplicationDetails = () => {
 
 
   const showTransfererDetails = React.useCallback(() => {
+    console.log("showTransfererDetails==", auditData, appDetailsToShow, applicationDetails, newConfigMutate);
     if (
       auditData &&
       Object.keys(appDetailsToShow).length &&

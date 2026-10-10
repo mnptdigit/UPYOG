@@ -329,7 +329,7 @@ export const newConfigMutate = [
         component: "SelectProofIdentity",
         texts: {
           headerCaption: "PT_OWNERS_DETAILS",
-          header: "PT_PROOF_IDENTITY_HEADER",
+          header: "PT_PROOF_OF_ADDRESS_HEADER",
           cardText: "",
           submitBarLabel: "PT_COMMON_NEXT",
           addMultipleText: "PT_COMMON_ADD_APPLICANT_LABEL",
@@ -378,7 +378,7 @@ export const newConfigMutate = [
         component: "SelectProofIdentity",
         texts: {
           headerCaption: "PT_OWNERS_DETAILS",
-          header: "PT_PROOF_IDENTITY_HEADER",
+          header: "PT_PROOF_OF_ADDRESS_HEADER",
           cardText: "",
           submitBarLabel: "PT_COMMON_NEXT",
         },
@@ -513,7 +513,7 @@ export const newConfigMutate = [
         withoutLabel: true,
         texts: {
           headerCaption: "PT_PROPERTY_LOCATION_CAPTION",
-          header: "Proof of Address",
+          header: "PT_PROOF_IDENTITY_HEADER",
           cardText: "",
           nextText: "PT_COMMONS_NEXT",
           submitBarLabel: "PT_COMMONS_NEXT",
@@ -563,7 +563,8 @@ export const newConfigMutate = [
                   "headerCaption": "",
                   "header": "PT_PROPERTY_PHOTO",
                   "cardText": "",
-                  "submitBarLabel": "PT_COMMONS_NEXT"
+                  "submitBarLabel": "PT_COMMONS_NEXT",
+                  "skipText": "CORE_COMMON_SKIP_CONTINUE"
               },
               "key": "propertyPhoto",
               "withoutLabel": true

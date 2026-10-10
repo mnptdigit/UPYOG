@@ -47,7 +47,7 @@ const getPropertyEditDetails = (data = { }) => {
             doc.documentType = { code: doc?.documentType, i18nKey: stringReplaceAll(doc?.documentType, ".", "_") };
             document["specialProofIdentity"] = doc;
           }
-          if (doc?.documentType && typeof doc?.documentType == "string" && doc?.documentType?.includes("IDENTITYPROOF")) {
+          if (doc?.documentType && typeof doc?.documentType == "string" && doc?.documentType?.includes("ADDRESSPROOF")) {
             doc.documentType = { code: doc?.documentType, i18nKey: stringReplaceAll(doc?.documentType, ".", "_") };
             document["proofIdentity"] = doc;
           }
@@ -79,7 +79,8 @@ const getPropertyEditDetails = (data = { }) => {
   data.address.pincode = data?.address?.pincode;
   data.address.city = { code: data?.tenantId, i18nKey: `TENANT_TENANTS_${stringReplaceAll(data?.tenantId.toUpperCase(),".","_")}` };
   data.address.locality.i18nkey = data?.tenantId.replace(".", "_").toUpperCase() + "_" + "REVENUE" + "_" + data?.address?.locality?.code;
-  let addressDocs = data?.documents?.filter((doc) => doc?.documentType?.includes("ADDRESSPROOF")).map(doc => ({ ...doc }));;
+  const documentTypes = ["PATTA", "DAG", "SELF", "OTHERS"];
+  let addressDocs = data?.documents?.filter((doc) => documentTypes.some(type => doc?.documentType?.includes(type))).map(doc => ({ ...doc }));;
   if (checkArrayLength(addressDocs)) {
     addressDocs[0].documentType = { code: addressDocs[0]?.documentType, i18nKey: stringReplaceAll(addressDocs[0]?.documentType, ".", "_") };
     if (data?.address?.documents) {
@@ -611,6 +612,8 @@ const EditProperty = ({ parentRoute }) => {
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
+    console.log("handleSelect==", key, data, skipStep, index, isAddMultiple);
+    console.log("params==", params);
     if (key === "owners") {
       let owners = params.owners || [];
       owners[index] = data;

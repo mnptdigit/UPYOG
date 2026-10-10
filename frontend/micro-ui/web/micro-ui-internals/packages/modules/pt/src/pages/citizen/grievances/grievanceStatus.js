@@ -12,11 +12,16 @@ const GrievanceStatus = ({ isTracking = false }) => {
     // State management
     const [grievanceData, setGrievanceData] = useState(null);
     const [voicecallDetails, setVoicecallDetails] = useState([]);
+    const [assinerAssigneeDetails, setAssinerAssigneeDetails] = useState([]);
+    const userInfos = sessionStorage.getItem("Digit.citizen.userRequestObject");
+    const userInfo = userInfos ? JSON.parse(userInfos) : {};
+    const userInformation = userInfo?.value?.info;
+    console.log("userInformation==",userInformation);
     const [userDetails, setUserDetails] = useState( {
-            "id": "15",
-            "name": "Robin Sharma",
-            "mobileNo": "9999999999",
-            "email": "Robin@gmail.com",
+            "id": userInformation?.uuid || '',
+            "name": userInformation?.name || '',
+            "mobileNo": userInformation?.mobileNumber || '',
+            "email": userInformation?.emailId || '',
             "address": null,
             "gender": "Male",
             "userType": "Citizen",
@@ -38,6 +43,7 @@ const GrievanceStatus = ({ isTracking = false }) => {
     const [approvedAppealSteps, setApprovedAppealSteps] = useState([]);
     const [dropdownPosition, setDropdownPosition] = useState('bottom');
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showCommentsModal, setShowCommentsModal] = useState(false);
     const dropdownRef = useRef(null);
 
     // Get user details from localStorage on mount
@@ -103,7 +109,7 @@ const GrievanceStatus = ({ isTracking = false }) => {
                 body: JSON.stringify(reqObj)
             })
             .then(res => res.json())
-            .then(data => {
+            .then(async data => {
                 setIsLoading(false);
                 if (data && data.success && data.response && data.response.length > 0) {
                     const grievance = data.response[0];
@@ -111,16 +117,48 @@ const GrievanceStatus = ({ isTracking = false }) => {
                     // Format data
                     grievance.field_details = grievance.field_1 || [];
                     grievance.raised_on = new Date(grievance.created_at).toDateString();
-                    setGrievanceData(grievance);
-                    setGrievanceTableId(grievance.id);
+                    if (grievance?.workflowDetails && grievance.workflowDetails.length > 0) {
+                        const uuids = [
+                            ...new Set(
+                                grievance.workflowDetails.flatMap((step) => [
+                                    step.assign_by,
+                                    step.assign_to
+                                ]).filter(Boolean)
+                            )
+                        ];
 
-                    // Find similar grievances if not citizen
-                    if (userDetails?.userType !== 'Citizen') {
-                        findSimilarGrievances(grievance.description_en);
+                        console.log(uuids);
+                        const userDetails = await Digit.UserService.userSearch(null, { uuid: uuids }, {});
+                        console.log("userDetails==",userDetails);
+                        if (userDetails && userDetails.user && userDetails.user.length > 0) {
+                            setAssinerAssigneeDetails(userDetails.user);
+                            const employees = userDetails.user || [];
+                            (grievance.workflowDetails || []).map(step => {
+                                const assignByEmployee = employees.find(employee => employee.uuid == step.assign_by);
+                                const assignToEmployee = employees.find(employee => employee.uuid == step.assign_to);
+                                step.assign_by_employee_email = assignByEmployee && assignByEmployee.emailId || null;
+                                step.assign_by_employee_mobile_no = assignByEmployee && assignByEmployee.mobileNumber || null;
+                                step.assign_by_employee_name = assignByEmployee && assignByEmployee.name || null;
+                                step.assign_by_employee_type = assignByEmployee && assignByEmployee.type || null;
+                                step.employee_email = assignToEmployee && assignToEmployee.emailId || null;
+                                step.employee_mobile_no = assignToEmployee && assignToEmployee.mobileNumber || null;
+                                step.employee_name = assignToEmployee && assignToEmployee.name || null;
+                                step.employee_type = assignToEmployee && assignToEmployee.type || null;
+                            });                        
+                        }
+                        console.log("grievance======",grievance);
+
+                        setGrievanceData(grievance);
+                        setGrievanceTableId(grievance.id);
+
+                        // Find similar grievances if not citizen
+                        if (userDetails?.userType !== 'Citizen') {
+                            findSimilarGrievances(grievance.description_en);
+                        }
+
+                        // Mark approved steps
+                        markApprovedSteps(grievance);
                     }
-
-                    // Mark approved steps
-                    markApprovedSteps(grievance);
                 }
             })
             .catch(error => {
@@ -524,7 +562,7 @@ const GrievanceStatus = ({ isTracking = false }) => {
                                     <label style={{ display: 'block', fontSize: '16px', color: '#666', marginBottom: '5px' }}>
                                         <strong>Mobile No.:</strong>
                                     </label>
-                                    <p style={{ margin: 0, fontSize: '16px' }}>{grievanceData.mobileNo}</p>
+                                    <p style={{ margin: 0, fontSize: '16px' }}>{grievanceData.mobile_no}</p>
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '16px', color: '#666', marginBottom: '5px' }}>
@@ -780,6 +818,25 @@ const GrievanceStatus = ({ isTracking = false }) => {
                                     </button>
                                 )}
 
+                                {userDetails?.userType === 'Citizen' && grievanceData.status === 'Pending with citizen' && (
+                                    <button
+                                        onClick={() => { setShowCommentsModal(true); setShowActionDropdown(false); }}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '10px 15px',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            fontSize: '16px',
+                                            borderBottom: '1px solid #f0f0f0'
+                                        }}
+                                    >
+                                        Share your comments
+                                    </button>
+                                )}
+
                                 {userDetails?.userType !== 'Citizen' && grievanceData.status !== 'Approve' && grievanceData.status !== 'Closed' && (
                                     <>
                                         <button
@@ -854,7 +911,23 @@ const GrievanceStatus = ({ isTracking = false }) => {
                     }}
                 />
             )}
+            {/* Comments Modal */}
+            {showCommentsModal && (
+                <CommentsModal
+                    grievanceId={grievanceId}
+                    grievanceTableId={grievanceTableId}
+                    userDetails={userDetails}
+                    grievanceData={grievanceData}
+                    onClose={() => setShowCommentsModal(false)}
+                    onSuccess={() => {
+                        setShowCommentsModal(false);
+                        getGrievanceById();
+                    }}
+                />
+            )}
         </Fragment>
+
+        
     );
 }
 
@@ -889,20 +962,19 @@ const FeedbackModal = ({ grievanceId, grievanceTableId, userDetails, grievanceDa
 
             if (wantAppeal) {
                 // Appeal: call /appeal/create
-                url = API_ENDPOINTS.CREATE_APPEAL;
+                url = API_ENDPOINTS.GRIEVANCE_UPDATE;
                 payload = {
                     data: {
                         assign_by: userDetails?.id,
-                        assign_to: grievanceData?.assign_to || 19,
-                        comments: '',
-                        status: 'Appeal raised',
-                        action: 'Appeal raised',
+                        assign_to: grievanceData?.assign_by || 19,
+                        comments: remarks.trim(),
+                        status: 'Pending',
+                        action: 'Re-opened by citizen',
                         grievance_table_id: grievanceTableId,
-                        appeal_description: remarks.trim(),
-                        feedback_description: '',
+                        feedback_description: remarks.trim(),
+                        feedback_rating: rating,
                         is_appeal: true,
-                        raised_by: userDetails?.id,
-                        rating
+                        workflow_table_id: grievanceData?.workflowDetails?.[grievanceData?.workflowDetails?.length - 1]?.id,
                     }
                 };
             } else {
@@ -912,15 +984,14 @@ const FeedbackModal = ({ grievanceId, grievanceTableId, userDetails, grievanceDa
                     data: {
                         assign_by: userDetails?.id,
                         assign_to: null,
-                        comments: '',
+                        comments: remarks.trim(),
                         status: 'Closed',
                         action: 'Closed',
                         grievance_table_id: grievanceTableId,
-                        appeal_description: '',
                         feedback_description: remarks.trim(),
+                        feedback_rating: rating,
                         is_appeal: false,
-                        raised_by: userDetails?.id,
-                        rating
+                        workflow_table_id: grievanceData?.workflowDetails?.[grievanceData?.workflowDetails?.length - 1]?.id,
                     }
                 };
             }
@@ -934,13 +1005,12 @@ const FeedbackModal = ({ grievanceId, grievanceTableId, userDetails, grievanceDa
             if (data && data.success) {
                 alert(data.message || (wantAppeal ? 'Appeal raised successfully!' : 'Feedback submitted successfully!'));
                 onSuccess();
-                history.push('/digit-ui/citizen/pt/pt-grievance-dashboard');
+                history.replace('/digit-ui/citizen/pt/pt-grievance-dashboard');
             } else {
                 alert(data?.message || 'Something went wrong!');
             }
         } catch (err) {
             console.error('Feedback submit error:', err);
-            alert('Something went wrong!');
         } finally {
             setIsSubmitting(false);
         }
@@ -1040,6 +1110,144 @@ const FeedbackModal = ({ grievanceId, grievanceTableId, userDetails, grievanceDa
                             }}
                         />
                         {errors.remarks && <p style={{ color: 'red', fontSize: '13px', margin: '6px 0 0' }}>{errors.remarks}</p>}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                    padding: '15px 20px', borderTop: '1px solid #eee',
+                    display: 'flex', justifyContent: 'flex-end', gap: '12px'
+                }}>
+                    <button
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                        style={{
+                            padding: '10px 28px', fontSize: '15px', fontWeight: '600',
+                            backgroundColor: '#0f9fd9', color: 'white', border: 'none',
+                            borderRadius: '4px', cursor: 'pointer'
+                        }}
+                    >Cancel</button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        style={{
+                            padding: '10px 28px', fontSize: '15px', fontWeight: '600',
+                            backgroundColor: '#00838f', color: 'white', border: 'none',
+                            borderRadius: '4px', cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                            opacity: isSubmitting ? 0.7 : 1
+                        }}
+                    >{isSubmitting ? 'Submitting...' : 'Submit'}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/* ── Comment Modal Component ── */
+const CommentsModal = ({ grievanceId, grievanceTableId, userDetails, grievanceData, onClose, onSuccess }) => {
+    const [comments, setComments] = useState('');
+    const [wantAppeal, setWantAppeal] = useState(false);
+    const [remarks, setRemarks] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
+
+
+    const validate = () => {
+        const newErrors = {};
+        if (!comments.trim()) newErrors.comments = 'Comments are mandatory';
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async () => {
+        if (!validate()) return;
+        setIsSubmitting(true);
+        console.log("grievanceData==",grievanceData)
+        let workflowTableLength = grievanceData?.workflowDetails?.length || 0;
+        try {
+            let url;
+            let payload;
+            // update grievance with comments
+            url = API_ENDPOINTS.GRIEVANCE_UPDATE;
+            payload = {
+                data: {
+                    assign_by: userDetails?.id,
+                    assign_to: grievanceData?.assign_by,
+                    comments: comments.trim(),
+                    status: 'Pending',
+                    action: 'Re-submit by citizen',
+                    grievance_table_id: grievanceTableId,
+                    workflow_table_id: grievanceData?.workflowDetails?.[workflowTableLength - 1]?.id
+                }
+            };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data && data.success) {
+                alert(data.message || ('Comments submitted successfully!'));
+                onSuccess();
+                history.replace('/digit-ui/citizen/pt/pt-grievance-dashboard');
+            } else {
+                alert(data?.message || 'Something went wrong!');
+            }
+        } catch (err) {
+            console.error('Comments submit error:', err);
+            // alert('Something went wrong!');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Overlay styles
+    const overlayStyle = {
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', zIndex: 10000
+    };
+
+    const modalStyle = {
+        backgroundColor: 'white', borderRadius: '8px', width: '600px',
+        maxWidth: '95vw', maxHeight: '90vh', overflow: 'auto',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.25)'
+    };
+
+    return (
+        <div style={overlayStyle} onClick={onClose}>
+            <div style={modalStyle} onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div style={{
+                    backgroundColor: '#0f9fd9', color: 'white', padding: '10px 20px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Re-submit by citizen</h3>
+                    <button onClick={onClose} style={{
+                        background: 'none', border: 'none', color: 'white',
+                        fontSize: '22px', cursor: 'pointer', fontWeight: 'bold'
+                    }}>✕</button>
+                </div>
+
+                {/* Body */}
+                <div style={{ padding: '25px 20px' }}>
+                    {/* Comments */}
+                    <div style={{ marginBottom: '10px' }}>
+                        <label style={{ display: 'block', fontWeight: '400', fontSize: '16px', marginBottom: '8px', color: '#666' }}>
+                            Comments <span style={{ color: 'red' }}>*</span>
+                        </label>
+                        <textarea
+                            value={comments}
+                            onChange={e => { setComments(e.target.value); setErrors(prev => ({ ...prev, comments: undefined })); }}
+                            rows={4}
+                            style={{
+                                width: '100%', padding: '10px', fontSize: '15px',
+                                border: errors.comments ? '1px solid red' : '1px solid #ccc',
+                                borderRadius: '4px', resize: 'vertical', boxSizing: 'border-box'
+                            }}
+                        />
+                        {errors.comments && <p style={{ color: 'red', fontSize: '13px', margin: '6px 0 0' }}>{errors.comments}</p>}
                     </div>
                 </div>
 

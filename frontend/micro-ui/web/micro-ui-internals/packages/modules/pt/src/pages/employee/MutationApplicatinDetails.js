@@ -32,8 +32,11 @@ const MutationApplicationDetails = ({ propertyId, acknowledgementIds, workflowDe
   const [billStatus, setBillStatus] = useState(null);
 
   const properties = get(data, "Properties", []);
+  console.log("properties==", properties);
   // const propertyId = get(data, "Properties[0].propertyId", []);
   let property = (properties && properties.length > 0 && properties[0]) || {};
+  console.log("property==", property);
+  console.log("data==", data);
   const application = property;
   sessionStorage.setItem("pt-property", JSON.stringify(application));
   const queryClient = useQueryClient();
@@ -89,6 +92,7 @@ const MutationApplicationDetails = ({ propertyId, acknowledgementIds, workflowDe
   }, [applicationDetails]);
 
   const showTransfererDetails = () => {
+    console.log("MshowTransfererDetails==", auditResponse, appDetailsToShow, applicationDetails, newConfigMutate);
     if (
       auditResponse &&
       Object.keys(appDetailsToShow).length &&
@@ -96,6 +100,7 @@ const MutationApplicationDetails = ({ propertyId, acknowledgementIds, workflowDe
       applicationDetails?.applicationData?.creationReason === "MUTATION" &&
       !appDetailsToShow?.applicationDetails.find((e) => e.title === "PT_MUTATION_TRANSFEROR_DETAILS")
     ) {
+      console.log("PT_MUTATION_TRANSFEROR_DETAILS==", auditResponse, appDetailsToShow, newConfigMutate);
       let applicationDetails = appDetailsToShow.applicationDetails?.filter((e) => e.title === "PT_OWNERSHIP_INFO_SUB_HEADER");
       let compConfig = newConfigMutate.reduce((acc, el) => [...acc, ...el.body], []).find((e) => e.component === "TransfererDetails");
       applicationDetails.unshift({
@@ -267,6 +272,9 @@ const MutationApplicationDetails = ({ propertyId, acknowledgementIds, workflowDe
     property,
     "ownersInit", []
   );
+
+  console.log("transfereeOwners==", transfereeOwners);
+  console.log("transferorOwners==", transferorOwners);
 
   let transfereeInstitution = get(
     property,
